@@ -2,7 +2,12 @@
 
 import { useEffect, useState } from "react";
 import {
+  Check,
+  Clock,
   Globe2,
+  Sparkles,
+  Shuffle,
+  Zap,
   Hand,
   Hourglass,
   Library,
@@ -17,6 +22,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
+import { AvatarPicker } from "@/components/ui/AvatarPicker";
+import { setAvatar as saveAvatar } from "@/lib/client/prefs";
 import { CategoryIcon } from "@/components/ui/CategoryIcon";
 import type { RoomCtx } from "./RoomClient";
 
@@ -36,11 +43,16 @@ interface Pack {
 }
 
 export function Lobby({ ctx }: { ctx: RoomCtx }) {
-  const { state, isHost, act } = ctx;
+  const { state, act } = ctx;
+  const isHost = ctx.isHost;
   const s = state.settings;
   const [newCat, setNewCat] = useState("");
   const [packs, setPacks] = useState<{ mine: Pack[]; community: Pack[] }>({ mine: [], community: [] });
   const online = state.players.filter((p) => p.connected).length;
+  const isSpectator = ctx.isSpectator;
+  const me = state.players.find((p) => p.id === state.you);
+  const waiting = state.players.filter((p) => p.connected && !p.isHost && !p.lobbyReady);
+  const readyCount = online - waiting.length;
 
   useEffect(() => {
     if (!isHost) return;
@@ -74,27 +86,53 @@ export function Lobby({ ctx }: { ctx: RoomCtx }) {
             .filter((p) => p.connected)
             .slice(0, 5)
             .map((p) => (
-              <span key={p.id} className="rounded-full ring-4 ring-deck-2">
-                <Avatar name={p.nickname} image={p.image} seed={p.id} size={40} />
+              <span key={p.id} className={`rounded-full ring-4 ring-deck-2 ${p.isHost || p.lobbyReady ? "" : "opacity-50"}`}>
+                <Avatar name={p.nickname} image={p.image} avatar={p.avatar} seed={p.id} size={40} />
               </span>
             ))}
         </div>
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-2xl font-bold">
-            {online < 2 ? "Warte auf Mitspieler" : `${online} Spieler bereit`}
+            {online < 2 ? "Warte auf Mitspieler" : waiting.length > 0 ? `${readyCount} von ${online} bereit` : "Alle sind bereit"}
           </h1>
           <p className="text-sm text-haze">
-            {isHost
-              ? online < 2
-                ? "Teile den Einladungslink. Du kannst auch allein eine Proberunde starten."
-                : "Passe die Regeln an und starte, wenn alle da sind."
-              : "Der Spielleiter legt die Regeln fest und startet das Spiel."}
+            {isSpectator
+              ? "Du schaust zu. Das Spiel startet, sobald der Spielleiter loslegt."
+              : isHost
+                ? waiting.length > 0
+                  ? `Warte auf: ${waiting.map((p) => p.nickname).join(", ")}`
+                  : online < 2
+                    ? "Teile den Einladungslink. Allein geht auch eine Proberunde."
+                    : "Du kannst starten."
+                : me?.lobbyReady
+                  ? "Du bist bereit. Der Spielleiter startet gleich."
+                  : "Gib Bescheid, wenn du bereit bist."}
           </p>
         </div>
+        {me && !isSpectator && me.image === null && (
+          <AvatarPicker
+            name={me.nickname}
+            value={me.avatar}
+            size={40}
+            onChange={(a) => {
+              saveAvatar(a);
+              act("avatar:set", a);
+            }}
+          />
+        )}
         {isHost && (
-          <button className="btn-primary px-6 py-3 text-base" onClick={() => act("game:start")}>
+          <button className="btn-primary px-6 py-3 text-base" disabled={waiting.length > 0} onClick={() => act("game:start")}>
             <Play className="h-5 w-5 fill-current" />
             Spiel starten
+          </button>
+        )}
+        {!isHost && me && (
+          <button
+            className={me.lobbyReady ? "btn-secondary px-6 py-3 text-base" : "btn-primary px-6 py-3 text-base"}
+            onClick={() => act("lobby:ready", !me.lobbyReady)}
+          >
+            {me.lobbyReady ? <Clock className="h-5 w-5" /> : <Check className="h-5 w-5" />}
+            {me.lobbyReady ? "Doch nicht bereit" : "Bereit"}
           </button>
         )}
       </section>
@@ -118,6 +156,14 @@ export function Lobby({ ctx }: { ctx: RoomCtx }) {
           {s.allowStop && (
             <Stepper icon={Hourglass} label="Restzeit nach Stopp" unit="s" value={s.stopGrace} min={0} max={60} step={5} disabled={!isHost} onChange={(v) => update({ stopGrace: v })} />
           )}
+        </div>
+
+        <h3 className="mb-3 mt-8 font-semibold">Spielmodi</h3>
+        <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+          <Toggle icon={Zap} label="Blitzrunden" hint="Zufällige Runden mit halber Zeit" on={s.blitz} onText="An" offText="Aus" disabled={!isHost} onChange={(v) => update({ blitz: v })} />
+          <Toggle icon={Sparkles} label="Finale doppelt" hint="Letzte Runde zählt doppelt" on={s.doubleFinal} onText="An" offText="Aus" disabled={!isHost} onChange={(v) => update({ doubleFinal: v })} />
+          <Toggle icon={Shuffle} label="Bonuskategorie" hint="Jede Runde eine Überraschungskategorie" on={s.bonusCategory} onText="An" offText="Aus" disabled={!isHost} onChange={(v) => update({ bonusCategory: v })} />
+          <Toggle icon={Sparkles} label="Joker" hint="Einmal pro Spiel doppelte Punkte für ein Feld" on={s.jokers} onText="An" offText="Aus" disabled={!isHost} onChange={(v) => update({ jokers: v })} />
         </div>
 
         <div className="mt-8">
@@ -226,13 +272,16 @@ export function Lobby({ ctx }: { ctx: RoomCtx }) {
   );
 }
 
-function Row({ icon: Icon, label, children }: { icon: LucideIcon; label: string; children: React.ReactNode }) {
+function Row({ icon: Icon, label, hint, children }: { icon: LucideIcon; label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 border-b border-rim/60 pb-4">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-night-2 text-haze">
         <Icon className="h-4 w-4" />
       </span>
-      <span className="flex-1 font-medium">{label}</span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium">{label}</span>
+        {hint && <span className="block text-xs text-dim">{hint}</span>}
+      </span>
       {children}
     </div>
   );
@@ -276,6 +325,7 @@ function Stepper(props: {
 function Toggle(props: {
   icon: LucideIcon;
   label: string;
+  hint?: string;
   on: boolean;
   onText: string;
   offText: string;
@@ -283,7 +333,7 @@ function Toggle(props: {
   onChange: (v: boolean) => void;
 }) {
   return (
-    <Row icon={props.icon} label={props.label}>
+    <Row icon={props.icon} label={props.label} hint={props.hint}>
       <button
         role="switch"
         aria-checked={props.on}

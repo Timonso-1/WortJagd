@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DoorOpen, Globe2, Loader2, Lock, Plus, Users } from "lucide-react";
+import { DoorOpen, Eye, Globe2, Loader2, Lock, Plus, Users } from "lucide-react";
+import { getAvatar, setAvatar as saveAvatar } from "@/lib/client/prefs";
+import { AvatarPicker } from "@/components/ui/AvatarPicker";
+import type { AvatarStyle } from "@/server/game/types";
 import { emit, getNickname, getSocket, setNickname } from "@/lib/client/socket";
 import type { LobbyRoom } from "@/server/game/types";
 import { Tile } from "@/components/ui/Tile";
@@ -51,6 +54,7 @@ function useLetterRoll() {
 export default function Home() {
   const router = useRouter();
   const [nick, setNick] = useState("");
+  const [avatar, setAvatarState] = useState<AvatarStyle | null>(null);
   const [code, setCode] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [rooms, setRooms] = useState<LobbyRoom[]>([]);
@@ -60,6 +64,7 @@ export default function Home() {
 
   useEffect(() => {
     setNick(getNickname());
+    setAvatarState(getAvatar());
     let off = () => {};
     let cancelled = false;
     getSocket().then((s) => {
@@ -78,20 +83,20 @@ export default function Home() {
     };
   }, []);
 
-  async function go(action: "create" | "join", joinCode?: string) {
+  async function go(action: "create" | "join" | "watch", joinCode?: string) {
     const n = nick.trim();
     if (!n) return setError("Gib zuerst einen Namen ein.");
     setNickname(n);
-    setBusy(action);
+    setBusy(action === "create" ? "create" : "join");
     setError(null);
     try {
       if (action === "create") {
-        const { code } = await emit<{ code: string }>("room:create", { nickname: n, settings: { isPublic } });
+        const { code } = await emit<{ code: string }>("room:create", { nickname: n, avatar, settings: { isPublic } });
         router.push(`/room/${code}`);
       } else {
         const c = (joinCode ?? code).trim().toUpperCase();
         if (!/^[A-Z0-9]{5}$/.test(c)) throw new Error("Der Raumcode hat 5 Zeichen.");
-        router.push(`/room/${c}`);
+        router.push(action === "watch" ? `/room/${c}?watch=1` : `/room/${c}`);
       }
     } catch (e) {
       setError((e as Error).message);
@@ -134,6 +139,15 @@ export default function Home() {
 
         <div className="panel p-6 sm:p-8">
           <label className="field-label" htmlFor="nick">Dein Spielername</label>
+          <div className="flex items-center gap-3">
+          <AvatarPicker
+            name={nick}
+            value={avatar}
+            onChange={(a) => {
+              setAvatarState(a);
+              saveAvatar(a);
+            }}
+          />
           <input
             id="nick"
             className="field text-lg"
@@ -144,6 +158,7 @@ export default function Home() {
             placeholder="z. B. Timo"
             autoComplete="nickname"
           />
+          </div>
 
           <button className="btn-primary mt-5 w-full py-3 text-base" disabled={busy !== null} onClick={() => go("create")}>
             {busy === "create" ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}
@@ -211,13 +226,27 @@ export default function Home() {
                         {r.categories} Kategorien, {r.rounds} Runden – {PHASE_LABEL[r.phase]}
                       </p>
                     </div>
-                    <span className="ml-auto flex items-center gap-1.5 text-sm text-haze">
-                      <Users className="h-4 w-4" />
-                      {r.players}/{r.maxPlayers}
+                    <span className="ml-auto flex items-center gap-3 text-sm text-haze">
+                      <span className="flex items-center gap-1.5" title="Spieler">
+                        <Users className="h-4 w-4" />
+                        {r.players}/{r.maxPlayers}
+                      </span>
+                      {r.spectators > 0 && (
+                        <span className="flex items-center gap-1.5" title="Zuschauer">
+                          <Eye className="h-4 w-4" />
+                          {r.spectators}
+                        </span>
+                      )}
                     </span>
-                    <button className="btn-secondary px-3 py-1.5 text-sm" disabled={busy !== null || full} onClick={() => go("join", r.code)}>
-                      {full ? "Voll" : "Beitreten"}
-                    </button>
+                    <span className="flex gap-1.5">
+                      <button className="btn-quiet border border-rim px-3 py-1.5 text-sm" disabled={busy !== null} onClick={() => go("watch", r.code)} title="Zuschauen">
+                        <Eye className="h-4 w-4" />
+                        <span className="sr-only sm:not-sr-only">Zuschauen</span>
+                      </button>
+                      <button className="btn-secondary px-3 py-1.5 text-sm" disabled={busy !== null || full} onClick={() => go("join", r.code)}>
+                        {full ? "Voll" : "Mitspielen"}
+                      </button>
+                    </span>
                   </li>
                 );
               })}

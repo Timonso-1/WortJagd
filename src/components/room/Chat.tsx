@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { MessageSquare, SendHorizontal } from "lucide-react";
-import type { ChatMessage, PublicPlayer } from "@/server/game/types";
+import type { AvatarStyle, ChatMessage, PublicPlayer, PublicSpectator } from "@/server/game/types";
 import { Avatar } from "@/components/ui/Avatar";
 
 const time = (at: number) => new Date(at).toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
@@ -15,10 +15,10 @@ export function Chat({
 }: {
   messages: ChatMessage[];
   me: string;
-  players: PublicPlayer[];
+  players: (PublicPlayer | PublicSpectator)[];
   onSend: (t: string) => void;
 }) {
-  const imageOf = new Map(players.map((p) => [p.id, p.image]));
+  const who = new Map<string, { image: string | null; avatar: AvatarStyle | null }>(players.map((p) => [p.id, p]));
   const [text, setText] = useState("");
   const box = useRef<HTMLDivElement>(null);
 
@@ -45,10 +45,11 @@ export function Chat({
           const own = m.playerId === me;
           return (
             <div key={m.id} className={`flex gap-2 ${own ? "flex-row-reverse" : ""}`}>
-              <Avatar name={m.nickname} image={m.playerId ? imageOf.get(m.playerId) : null} seed={m.playerId ?? m.nickname} size={26} />
+              <Avatar name={m.nickname} image={m.playerId ? who.get(m.playerId)?.image : null} avatar={m.playerId ? who.get(m.playerId)?.avatar : null} seed={m.playerId ?? m.nickname} size={26} />
               <div className={`flex min-w-0 max-w-[80%] flex-col ${own ? "items-end" : "items-start"}`}>
                 <span className="mb-0.5 flex items-baseline gap-1.5 px-1 text-xs">
                   <span className="font-semibold text-haze">{own ? "Du" : m.nickname}</span>
+                  {m.spectator && <span className="text-sky">Zuschauer</span>}
                   <time className="tabular-nums text-dim">{time(m.at)}</time>
                 </span>
                 <p

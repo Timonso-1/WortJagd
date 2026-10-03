@@ -8,9 +8,9 @@ export const users = pgTable("user", {
   id: id(),
   name: text("name"),
   email: text("email").unique(),
-  emailVerified: timestamp("emailVerified", { mode: "date" }),
+  emailVerified: timestamp("emailVerified", { mode: "date", withTimezone: true }),
   image: text("image"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const accounts = pgTable(
@@ -34,7 +34,7 @@ export const accounts = pgTable(
 export const sessions = pgTable("session", {
   sessionToken: text("sessionToken").primaryKey(),
   userId: text("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
-  expires: timestamp("expires", { mode: "date" }).notNull(),
+  expires: timestamp("expires", { mode: "date", withTimezone: true }).notNull(),
 });
 
 export const verificationTokens = pgTable(
@@ -42,7 +42,7 @@ export const verificationTokens = pgTable(
   {
     identifier: text("identifier").notNull(),
     token: text("token").notNull(),
-    expires: timestamp("expires", { mode: "date" }).notNull(),
+    expires: timestamp("expires", { mode: "date", withTimezone: true }).notNull(),
   },
   (t) => [primaryKey({ columns: [t.identifier, t.token] })],
 );
@@ -58,8 +58,8 @@ export const categoryPacks = pgTable(
     isPublic: boolean("is_public").notNull().default(false),
     uses: integer("uses").notNull().default(0),
     ownerId: text("owner_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-    updatedAt: timestamp("updated_at").notNull().defaultNow().$onUpdate(() => new Date()),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
   },
   (t) => [index("pack_public_uses_idx").on(t.isPublic, t.uses), index("pack_owner_idx").on(t.ownerId)],
 );
@@ -70,8 +70,8 @@ export const games = pgTable("game", {
   categories: text("categories").array().notNull(),
   letters: text("letters").array().notNull(),
   rounds: integer("rounds").notNull(),
-  startedAt: timestamp("started_at").notNull(),
-  finishedAt: timestamp("finished_at").notNull().defaultNow(),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+  finishedAt: timestamp("finished_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export const gamePlayers = pgTable(
@@ -85,4 +85,25 @@ export const gamePlayers = pgTable(
     rank: integer("rank").notNull(),
   },
   (t) => [index("gp_user_idx").on(t.userId)],
+);
+
+/** Jede Antwort jeder Runde, für Spielverlauf und Profilstatistiken */
+export const gameAnswers = pgTable(
+  "game_answer",
+  {
+    id: id(),
+    gameId: text("game_id").notNull().references(() => games.id, { onDelete: "cascade" }),
+    userId: text("user_id").references(() => users.id, { onDelete: "set null" }),
+    playerKey: text("player_key").notNull(),
+    nickname: text("nickname").notNull(),
+    roundIndex: integer("round_index").notNull(),
+    letter: text("letter").notNull(),
+    modifier: text("modifier"),
+    category: text("category").notNull(),
+    word: text("word").notNull(),
+    points: integer("points").notNull(),
+    valid: boolean("valid").notNull(),
+    joker: boolean("joker").notNull().default(false),
+  },
+  (t) => [index("ga_game_idx").on(t.gameId), index("ga_user_idx").on(t.userId)],
 );

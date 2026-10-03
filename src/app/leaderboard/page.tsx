@@ -1,4 +1,5 @@
 import { desc, eq, isNotNull, sql } from "drizzle-orm";
+import Link from "next/link";
 import { DatabaseZap, Trophy } from "lucide-react";
 import { db, schema } from "@/db";
 import { Avatar } from "@/components/ui/Avatar";
@@ -58,14 +59,14 @@ export default async function LeaderboardPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-3">
             {podium.map((r, i) => (
-              <div key={r.userId} className="panel flex items-center gap-4 p-5">
+              <Link href={`/profile/${r.userId}`} key={r.userId} className="panel flex items-center gap-4 p-5 transition hover:border-rim-2">
                 <Tile size="sm">{i + 1}</Tile>
                 <Avatar name={r.name ?? "?"} image={r.image} seed={r.userId ?? undefined} size={40} />
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{r.name ?? "?"}</p>
                   <p className="font-display text-xl font-bold tabular-nums text-tile">{r.total}</p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           <div className="panel overflow-x-auto p-2">
@@ -85,10 +86,10 @@ export default async function LeaderboardPage() {
                   <tr key={r.userId} className="border-t border-rim/60">
                     <td className="px-4 py-3 font-display font-bold text-haze">{i + 1}.</td>
                     <td className="px-4 py-3">
-                      <span className="flex items-center gap-2.5">
+                      <Link href={`/profile/${r.userId}`} className="flex items-center gap-2.5 hover:text-tile">
                         <Avatar name={r.name ?? "?"} image={r.image} seed={r.userId ?? undefined} size={28} />
                         <span className="font-medium">{r.name ?? "?"}</span>
-                      </span>
+                      </Link>
                     </td>
                     <td className="px-4 py-3 text-right font-display text-base font-bold tabular-nums">{r.total}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-haze">{r.games}</td>

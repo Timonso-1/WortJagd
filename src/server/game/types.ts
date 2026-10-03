@@ -1,4 +1,15 @@
+import type { Hint } from "./wordcheck";
+
 export type Phase = "lobby" | "playing" | "voting" | "results" | "finished";
+export type RoundModifier = "blitz" | "double" | null;
+
+export const REACTIONS = ["😂", "🔥", "🤯", "👏", "🤔"] as const;
+export type Reaction = (typeof REACTIONS)[number];
+
+export interface AvatarStyle {
+  color: string;
+  icon: string;
+}
 
 export interface RoomSettings {
   rounds: number;
@@ -12,6 +23,14 @@ export interface RoomSettings {
   stopGrace: number;
   isPublic: boolean;
   maxPlayers: number;
+  /** Zufällige Blitzrunden mit halber Zeit */
+  blitz: boolean;
+  /** Letzte Runde zählt doppelt */
+  doubleFinal: boolean;
+  /** Jede Runde eine zusätzliche Zufallskategorie */
+  bonusCategory: boolean;
+  /** Jeder Spieler hat pro Spiel einen Joker (doppelte Punkte in einer Kategorie) */
+  jokers: boolean;
 }
 
 export interface Player {
@@ -19,10 +38,21 @@ export interface Player {
   userId: string | null;
   nickname: string;
   image: string | null;
+  avatar: AvatarStyle | null;
   socketIds: Set<string>;
   score: number;
   connected: boolean;
   joinedAt: number;
+  lobbyReady: boolean;
+  jokerUsed: boolean;
+}
+
+export interface Spectator {
+  id: string;
+  nickname: string;
+  image: string | null;
+  avatar: AvatarStyle | null;
+  socketIds: Set<string>;
 }
 
 /** answers[playerId][categoryIndex] */
@@ -41,11 +71,22 @@ export interface RoundScore {
 export interface Round {
   index: number;
   letter: string;
+  categories: string[];
+  /** Index der Bonuskategorie in `categories`, falls vorhanden */
+  bonusIndex: number | null;
+  modifier: RoundModifier;
+  duration: number;
   startedAt: number;
   endsAt: number;
   stoppedBy: string | null;
   answers: AnswerMap;
   votes: VoteMap;
+  /** playerId -> Kategorie-Index */
+  jokers: Record<string, number>;
+  /** key -> emoji -> Spieler */
+  reactions: Record<string, Partial<Record<Reaction, Set<string>>>>;
+  /** key -> Hinweis aus Wortliste */
+  hints: Record<string, Hint>;
   score: RoundScore | null;
 }
 
@@ -56,6 +97,7 @@ export interface ChatMessage {
   text: string;
   at: number;
   system?: boolean;
+  spectator?: boolean;
 }
 
 // ---------- Client-Sicht ----------
@@ -64,19 +106,34 @@ export interface PublicPlayer {
   id: string;
   nickname: string;
   image: string | null;
+  avatar: AvatarStyle | null;
   score: number;
   connected: boolean;
   isHost: boolean;
   isGuest: boolean;
+  /** Lobby: bereit */
+  lobbyReady: boolean;
+  jokerUsed: boolean;
   /** Während der Runde: Anzahl ausgefüllter Felder (keine Inhalte) */
   filled?: number;
   /** Während der Abstimmung: fertig */
   ready?: boolean;
 }
 
+export interface PublicSpectator {
+  id: string;
+  nickname: string;
+  image: string | null;
+  avatar: AvatarStyle | null;
+}
+
 export interface PublicRound {
   index: number;
   letter: string;
+  categories: string[];
+  bonusIndex: number | null;
+  modifier: RoundModifier;
+  duration: number;
   startedAt: number;
   endsAt: number;
   stoppedBy: string | null;
@@ -84,6 +141,9 @@ export interface PublicRound {
   answers?: AnswerMap;
   /** votes als Liste der Ablehnenden */
   votes?: Record<string, string[]>;
+  jokers?: Record<string, number>;
+  reactions?: Record<string, Partial<Record<Reaction, string[]>>>;
+  hints?: Record<string, Hint>;
   score?: RoundScore | null;
 }
 
@@ -92,12 +152,17 @@ export interface RoomState {
   phase: Phase;
   settings: RoomSettings;
   players: PublicPlayer[];
+  spectators: PublicSpectator[];
   hostId: string;
   you: string;
+  isSpectator: boolean;
   round: PublicRound | null;
   /** eigene Antworten in der laufenden Runde */
   myAnswers: string[];
-  history: { letter: string; totals: Record<string, number> }[];
+  /** eigener Joker in der laufenden Runde */
+  myJoker: number | null;
+  history: { letter: string; modifier: RoundModifier; totals: Record<string, number> }[];
+  savedGameId: string | null;
   serverTime: number;
 }
 
@@ -105,6 +170,7 @@ export interface LobbyRoom {
   code: string;
   hostName: string;
   players: number;
+  spectators: number;
   maxPlayers: number;
   rounds: number;
   categories: number;

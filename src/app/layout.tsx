@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { LayoutGrid, LogIn, LogOut, Trophy } from "lucide-react";
+import { HeaderControls } from "@/components/layout/HeaderControls";
 import { auth, signOut } from "@/auth";
 import { Logo } from "@/components/ui/Logo";
 import { Avatar } from "@/components/ui/Avatar";
@@ -11,13 +12,26 @@ export const metadata: Metadata = {
   description: "Stadt, Land, Fluss mit Freunden in Echtzeit spielen.",
 };
 
-export const viewport: Viewport = { themeColor: "#121735" };
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#121735" },
+    { media: "(prefers-color-scheme: light)", color: "#eef1fa" },
+  ],
+};
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth().catch(() => null);
   const user = session?.user;
   return (
-    <html lang="de">
+    <html lang="de" suppressHydrationWarning>
+      <head>
+        {/* Theme vor dem ersten Rendern setzen, damit nichts aufblitzt */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem("wj.theme");if(t!=="light"&&t!=="dark")t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-dvh font-sans antialiased">
         <header className="sticky top-0 z-30 border-b border-rim/70 bg-night/80 backdrop-blur-xl">
           <nav className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4">
@@ -33,12 +47,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <span className="hidden sm:inline">Bestenliste</span>
             </Link>
             <div className="ml-auto flex items-center gap-2">
+              <HeaderControls />
               {user ? (
                 <>
-                  <span className="hidden items-center gap-2 text-sm text-haze sm:flex">
+                  <Link href="/profile" className="btn-quiet px-2 py-1.5 text-sm" title="Mein Profil">
                     <Avatar name={user.name ?? "?"} image={user.image} seed={user.id} size={28} />
-                    {user.name}
-                  </span>
+                    <span className="hidden sm:inline">{user.name}</span>
+                  </Link>
                   <form
                     action={async () => {
                       "use server";

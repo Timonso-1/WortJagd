@@ -49,3 +49,11 @@ test("pickLetter respektiert Ausschlüsse", () => {
     assert.ok(!["Q", "X", "Y", "A"].includes(l));
   }
 });
+
+test("Joker verdoppelt eine Kategorie, Multiplikator die ganze Runde", () => {
+  const answers = { a: ["Bonn", "Belgien"], b: ["Bremen", ""] };
+  const s = scoreRound("B", 2, ["a", "b"], answers, {}, { jokers: { a: 1 }, multiplier: 2 });
+  assert.deepEqual(s.points.a, [20, 80]);
+  assert.deepEqual(s.points.b, [20, 0]);
+  assert.equal(s.total.a, 100);
+});

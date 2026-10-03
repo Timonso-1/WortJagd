@@ -5,7 +5,7 @@ import { db, schema } from "../db";
 import { verifySocketToken } from "../lib/socket-token";
 import { GameError, Room, type JoinInfo, type RoomHooks } from "./game/room";
 import * as S from "./game/schemas";
-import type { ChatMessage } from "./game/types";
+import type { AvatarStyle, ChatMessage } from "./game/types";
 
 const makeCode = customAlphabet("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 5);
 const rooms = new Map<string, Room>();
@@ -13,7 +13,7 @@ const rooms = new Map<string, Room>();
 type Ack = (res: { ok: true; data?: unknown } | { ok: false; error: string }) => void;
 
 interface SocketData {
-  identity: Omit<JoinInfo, "nickname"> & { nickname: string | null };
+  identity: Omit<JoinInfo, "nickname" | "avatar"> & { nickname: string | null };
   roomCode: string | null;
 }
 
@@ -33,8 +33,10 @@ export function attachSocket(http: HttpServer) {
     pending.delete(code);
     const room = rooms.get(code);
     if (!room) return;
-    for (const p of room.players.values()) {
-      for (const sid of p.socketIds) io.to(sid).emit("room:state", room.stateFor(p.id));
+    for (const [id, sockets] of room.recipients()) {
+      if (sockets.size === 0) continue;
+      const state = room.stateFor(id);
+      for (const sid of sockets) io.to(sid).emit("room:state", state);
     }
   }
 
@@ -49,7 +51,13 @@ export function attachSocket(http: HttpServer) {
       io.to(`room:${room.code}`).emit("chat:message", msg);
     },
     finished(room) {
-      persistGame(room).catch((e) => console.error("[persist]", e));
+      persistGame(room)
+        .then((id) => {
+          if (!id) return;
+          room.savedGameId = id;
+          hooks.changed(room);
+        })
+        .catch((e) => console.error("[persist]", e));
     },
   };
 
@@ -113,15 +121,17 @@ export function attachSocket(http: HttpServer) {
       return r;
     };
 
-    const enter = (r: Room, nickname: string) => {
+    const enter = (r: Room, nickname: string, avatar: AvatarStyle | null | undefined, mode: "play" | "watch" = "play") => {
       if (socket.data.roomCode !== r.code) leaveCurrent();
       const info: JoinInfo = {
         id: pid,
         userId: socket.data.identity.userId,
         nickname: socket.data.identity.nickname ?? nickname,
         image: socket.data.identity.image,
+        avatar: avatar ?? null,
       };
-      r.join(info, socket.id);
+      if (mode === "watch") r.watch(info, socket.id);
+      else r.join(info, socket.id);
       socket.data.roomCode = r.code;
       socket.join(`room:${r.code}`);
       socket.emit("chat:history", r.chat);
@@ -138,12 +148,12 @@ export function attachSocket(http: HttpServer) {
     socket.on(
       "room:create",
       handle((p: unknown) => {
-        const { nickname, settings } = S.createPayload.parse(p);
+        const { nickname, settings, avatar } = S.createPayload.parse(p);
         let code = makeCode();
         while (rooms.has(code)) code = makeCode();
-        const r = new Room(code, { id: pid, userId: null, nickname, image: null }, hooks, settings);
+        const r = new Room(code, { id: pid, userId: null, nickname, image: null, avatar: avatar ?? null }, hooks, settings);
         rooms.set(code, r);
-        enter(r, nickname);
+        enter(r, nickname, avatar);
         return { code };
       }),
     );
@@ -151,11 +161,33 @@ export function attachSocket(http: HttpServer) {
     socket.on(
       "room:join",
       handle((p: unknown) => {
-        const { code, nickname } = S.joinPayload.parse(p);
+        const { code, nickname, avatar } = S.joinPayload.parse(p);
         const r = rooms.get(code);
         if (!r) throw new GameError("Raum nicht gefunden.");
-        enter(r, nickname);
+        enter(r, nickname, avatar);
         return { code };
+      }),
+    );
+
+    socket.on(
+      "room:watch",
+      handle((p: unknown) => {
+        const { code, nickname, avatar } = S.joinPayload.parse(p);
+        const r = rooms.get(code);
+        if (!r) throw new GameError("Raum nicht gefunden.");
+        enter(r, nickname, avatar, "watch");
+        return { code };
+      }),
+    );
+
+    socket.on("lobby:ready", handle((p: unknown) => room().setLobbyReady(pid, Boolean(p))));
+    socket.on("avatar:set", handle((p: unknown) => room().setAvatar(pid, S.avatar.parse(p))));
+    socket.on("joker:set", handle((p: unknown) => room().setJoker(pid, S.jokerPayload.parse(p).category)));
+    socket.on(
+      "reaction:toggle",
+      handle((p: unknown) => {
+        const { target, category, emoji } = S.reactPayload.parse(p);
+        room().react(pid, target, category, emoji);
       }),
     );
 
@@ -215,17 +247,18 @@ function publicRooms() {
     .slice(0, 50);
 }
 
-async function persistGame(room: Room) {
-  if (!process.env.DATABASE_URL) return;
+async function persistGame(room: Room): Promise<string | null> {
+  if (!process.env.DATABASE_URL) return null;
+  if (!room.rounds.some((r) => r.score)) return null;
   const ranked = [...room.players.values()].sort((a, b) => b.score - a.score);
-  await db.transaction(async (tx) => {
+  return db.transaction(async (tx) => {
     const [game] = await tx
       .insert(schema.games)
       .values({
         roomCode: room.code,
         categories: room.settings.categories,
         letters: room.rounds.map((r) => r.letter),
-        rounds: room.rounds.length,
+        rounds: room.rounds.filter((r) => r.score).length,
         startedAt: new Date(room.gameStartedAt),
       })
       .returning({ id: schema.games.id });
@@ -237,5 +270,31 @@ async function persistGame(room: Room) {
       return { gameId: game.id, userId: p.userId, nickname: p.nickname, score: p.score, rank };
     });
     if (rows.length) await tx.insert(schema.gamePlayers).values(rows);
+
+    const answers = room.rounds.flatMap((r) =>
+      r.score
+        ? ranked.flatMap((p) =>
+            r.categories.map((category, ci) => ({
+              gameId: game.id,
+              userId: p.userId,
+              playerKey: p.id,
+              nickname: p.nickname,
+              roundIndex: r.index,
+              letter: r.letter,
+              modifier: r.modifier,
+              category,
+              word: (r.answers[p.id]?.[ci] ?? "").trim(),
+              points: r.score!.points[p.id]?.[ci] ?? 0,
+              valid: r.score!.valid[p.id]?.[ci] ?? false,
+              joker: r.jokers[p.id] === ci,
+            })),
+          )
+        : [],
+    );
+    // In Blöcken einfügen, um Parameterlimits zu vermeiden
+    for (let i = 0; i < answers.length; i += 500) {
+      await tx.insert(schema.gameAnswers).values(answers.slice(i, i + 500));
+    }
+    return game.id;
   });
 }

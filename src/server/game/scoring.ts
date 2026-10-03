@@ -39,12 +39,20 @@ export function isValid(
   return rejectVotes * 2 <= eligibleVoters;
 }
 
+export interface ScoreOptions {
+  /** Joker: playerId -> Kategorie-Index mit doppelten Punkten */
+  jokers?: Record<string, number>;
+  /** Faktor für die ganze Runde (z. B. 2 bei doppelter Schlussrunde) */
+  multiplier?: number;
+}
+
 export function scoreRound(
   letter: string,
   categoryCount: number,
   playerIds: string[],
   answers: AnswerMap,
   votes: VoteMap,
+  opts: ScoreOptions = {},
 ): RoundScore {
   const valid: Record<string, boolean[]> = {};
   const points: Record<string, number[]> = {};
@@ -83,7 +91,12 @@ export function scoreRound(
     }
   }
 
-  for (const p of playerIds) total[p] = points[p].reduce((a, b) => a + b, 0);
+  const mult = opts.multiplier ?? 1;
+  for (const p of playerIds) {
+    const joker = opts.jokers?.[p];
+    points[p] = points[p].map((pts, c) => pts * mult * (joker === c ? 2 : 1));
+    total[p] = points[p].reduce((a, b) => a + b, 0);
+  }
   return { points, valid, total };
 }
 

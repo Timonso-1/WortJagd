@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Check, Link2, Loader2, LogOut } from "lucide-react";
+import { AlertCircle, Check, Eye, Link2, Loader2, LogOut, UserPlus } from "lucide-react";
+import { getAvatar } from "@/lib/client/prefs";
+import { sfx } from "@/lib/client/sound";
 import { emit, getNickname, getSocket, setNickname } from "@/lib/client/socket";
 import type { ChatMessage, Phase, RoomState } from "@/server/game/types";
 import { CodeTiles } from "@/components/ui/Tile";
@@ -18,6 +20,7 @@ import { Voting } from "./Voting";
 export interface RoomCtx {
   state: RoomState;
   isHost: boolean;
+  isSpectator: boolean;
   /** Serverzeit-Offset in ms */
   offset: number;
   act: (event: string, payload?: unknown) => Promise<void>;
@@ -30,7 +33,7 @@ const STEPS: { phase: Phase[]; label: string }[] = [
   { phase: ["results", "finished"], label: "Punkte" },
 ];
 
-export function RoomClient({ code }: { code: string }) {
+export function RoomClient({ code, watch = false }: { code: string; watch?: boolean }) {
   const router = useRouter();
   const [state, setState] = useState<RoomState | null>(null);
   const [chat, setChat] = useState<ChatMessage[]>([]);
@@ -41,6 +44,8 @@ export function RoomClient({ code }: { code: string }) {
   const [copied, setCopied] = useState(false);
   const offset = useRef(0);
   const joined = useRef(false);
+  const mode = useRef<"play" | "watch">(watch ? "watch" : "play");
+  const prev = useRef<RoomState | null>(null);
 
   useEffect(() => {
     let cleanup = () => {};
@@ -49,6 +54,13 @@ export function RoomClient({ code }: { code: string }) {
       if (cancelled) return;
       const onState = (st: RoomState) => {
         offset.current = st.serverTime - Date.now();
+        const p = prev.current;
+        if (p && st.round) {
+          if (st.round.stoppedBy && !p.round?.stoppedBy) sfx.stop();
+          if (st.phase === "results" && p.phase !== "results") sfx.reveal();
+          if (st.phase === "finished" && p.phase !== "finished") sfx.win();
+        }
+        prev.current = st;
         setState(st);
       };
       const onMsg = (m: ChatMessage) => setChat((c) => (c.some((x) => x.id === m.id) ? c : [...c.slice(-99), m]));
@@ -84,7 +96,7 @@ export function RoomClient({ code }: { code: string }) {
 
   async function join(n: string) {
     try {
-      await emit("room:join", { code, nickname: n });
+      await emit(mode.current === "watch" ? "room:watch" : "room:join", { code, nickname: n, avatar: getAvatar() });
       joined.current = true;
       setNeedNick(false);
     } catch (e) {
@@ -140,7 +152,13 @@ export function RoomClient({ code }: { code: string }) {
     );
   }
 
-  const ctx: RoomCtx = { state, isHost: state.hostId === state.you, offset: offset.current, act };
+  const ctx: RoomCtx = {
+    state,
+    isHost: state.hostId === state.you,
+    isSpectator: state.isSpectator,
+    offset: offset.current,
+    act,
+  };
   const stepIndex = STEPS.findIndex((s) => s.phase.includes(state.phase));
 
   return (
@@ -188,6 +206,24 @@ export function RoomClient({ code }: { code: string }) {
         </div>
       </div>
 
+      {state.isSpectator && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-sky/40 bg-sky/10 px-4 py-3 text-sm">
+          <Eye className="h-4 w-4 text-sky" />
+          <span className="flex-1">Du schaust zu. Antworten siehst du, sobald die Runde vorbei ist.</span>
+          {state.players.filter((p) => p.connected).length < state.settings.maxPlayers && (
+            <button
+              className="btn-secondary px-3 py-1.5 text-sm"
+              onClick={async () => {
+                mode.current = "play";
+                await act("room:join", { code: state.code, nickname: getNickname(), avatar: getAvatar() });
+              }}
+            >
+              <UserPlus className="h-4 w-4" /> Mitspielen
+            </button>
+          )}
+        </div>
+      )}
+
       <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
         <div className="min-w-0 space-y-6">
           {state.phase === "lobby" && <Lobby ctx={ctx} />}
@@ -198,7 +234,7 @@ export function RoomClient({ code }: { code: string }) {
         </div>
         <aside className="space-y-6">
           <Players ctx={ctx} />
-          <Chat messages={chat} me={state.you} players={state.players} onSend={(text) => act("chat:send", { text })} />
+          <Chat messages={chat} me={state.you} players={[...state.players, ...state.spectators]} onSend={(text) => act("chat:send", { text })} />
         </aside>
       </div>
 
