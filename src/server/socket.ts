@@ -114,7 +114,7 @@ export function attachSocket(http: HttpServer) {
     };
 
     const enter = (r: Room, nickname: string) => {
-      leaveCurrent();
+      if (socket.data.roomCode !== r.code) leaveCurrent();
       const info: JoinInfo = {
         id: pid,
         userId: socket.data.identity.userId,

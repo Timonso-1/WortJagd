@@ -1,41 +1,69 @@
 "use client";
 
+import { BadgeCheck, CheckCircle2, Crown, PenLine, UserMinus } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
 import type { RoomCtx } from "./RoomClient";
 
 export function Players({ ctx }: { ctx: RoomCtx }) {
   const { state, isHost, act } = ctx;
   const total = state.settings.categories.length;
-  const sorted = state.phase === "lobby" ? state.players : [...state.players].sort((a, b) => b.score - a.score);
+  const online = state.players.filter((p) => p.connected).length;
+  const showScore = state.phase !== "lobby";
+  const sorted = showScore ? [...state.players].sort((a, b) => b.score - a.score) : state.players;
+
   return (
-    <div className="card">
-      <h3 className="mb-2 font-semibold">
-        Spieler <span className="text-ink-soft">({state.players.filter((p) => p.connected).length}/{state.settings.maxPlayers})</span>
-      </h3>
+    <section className="panel p-5" aria-labelledby="players-h">
+      <div className="mb-3 flex items-baseline justify-between">
+        <h2 id="players-h" className="font-display text-lg font-bold">Spieler</h2>
+        <span className="text-sm text-dim">{online} von {state.settings.maxPlayers}</span>
+      </div>
       <ul className="space-y-1">
-        {sorted.map((p) => (
-          <li key={p.id} className={`group flex items-center gap-2 text-sm ${p.connected ? "" : "opacity-40"}`}>
-            <span className={`h-2 w-2 rounded-full ${p.connected ? "bg-ok" : "bg-ink-soft"}`} />
-            <span className={`truncate ${p.id === state.you ? "font-bold" : ""}`}>{p.nickname}</span>
-            {p.isHost && <span className="rounded bg-accent/15 px-1 text-xs text-accent">Leiter</span>}
-            {!p.isGuest && <span className="text-xs text-ink-soft" title="Angemeldet">✓</span>}
-            {p.filled !== undefined && (
-              <span className="text-xs text-ink-soft">{p.filled}/{total}</span>
-            )}
-            {p.ready && <span className="text-xs text-ok">fertig</span>}
-            <span className="ml-auto font-semibold tabular-nums">{state.phase !== "lobby" ? p.score : ""}</span>
-            {isHost && p.id !== state.you && (
-              <span className="hidden gap-1 group-hover:flex">
-                <button className="text-xs text-ink-soft hover:text-ink" title="Zum Leiter machen" onClick={() => act("host:transfer", { target: p.id })}>
-                  ↑
-                </button>
-                <button className="text-xs text-bad" title="Entfernen" onClick={() => act("player:kick", { target: p.id })}>
-                  ×
-                </button>
+        {sorted.map((p, i) => {
+          const me = p.id === state.you;
+          return (
+            <li key={p.id} className={`group flex items-center gap-3 rounded-xl px-2 py-2 ${me ? "bg-white/[0.04]" : ""}`}>
+              {showScore && <span className="w-4 text-right text-sm font-semibold tabular-nums text-dim">{i + 1}</span>}
+              <span className="relative">
+                <Avatar name={p.nickname} image={p.image} seed={p.id} size={34} dim={!p.connected} />
+                <span
+                  className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-deck ${p.connected ? "bg-go" : "bg-dim"}`}
+                  title={p.connected ? "Online" : "Offline"}
+                />
               </span>
-            )}
-          </li>
-        ))}
+              <div className="min-w-0 flex-1">
+                <p className={`flex items-center gap-1.5 truncate ${me ? "font-bold" : "font-medium"} ${p.connected ? "" : "text-dim"}`}>
+                  <span className="truncate">{p.nickname}</span>
+                  {p.isHost && <Crown className="h-3.5 w-3.5 shrink-0 text-tile" aria-label="Spielleiter" />}
+                  {!p.isGuest && <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-sky" aria-label="Angemeldet" />}
+                </p>
+                {p.filled !== undefined && (
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-rim">
+                      <span className="block h-full rounded-full bg-tile transition-all" style={{ width: `${(p.filled / total) * 100}%` }} />
+                    </span>
+                    <PenLine className="h-3 w-3 text-dim" aria-label={`${p.filled} von ${total} ausgefüllt`} />
+                  </div>
+                )}
+                {state.phase === "voting" && (
+                  <p className={`text-xs ${p.ready ? "text-go" : "text-dim"}`}>{p.ready ? "Fertig geprüft" : "Prüft noch"}</p>
+                )}
+              </div>
+              {p.ready && <CheckCircle2 className="h-4 w-4 text-go" aria-hidden="true" />}
+              {showScore && <span className="font-display text-lg font-bold tabular-nums">{p.score}</span>}
+              {isHost && !me && (
+                <span className="hidden items-center group-hover:flex group-focus-within:flex">
+                  <button className="icon-btn h-7 w-7" title="Zum Spielleiter machen" onClick={() => act("host:transfer", { target: p.id })}>
+                    <Crown className="h-3.5 w-3.5" />
+                  </button>
+                  <button className="icon-btn h-7 w-7 hover:!text-stop" title="Aus dem Raum entfernen" onClick={() => act("player:kick", { target: p.id })}>
+                    <UserMinus className="h-3.5 w-3.5" />
+                  </button>
+                </span>
+              )}
+            </li>
+          );
+        })}
       </ul>
-    </div>
+    </section>
   );
 }

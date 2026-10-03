@@ -1,58 +1,237 @@
 @import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/figtree";
 
+/*
+  Wortjagd – Spielabend-Look
+  night: Grundfläche · deck: Flächen · rim: Kanten
+  tile: Spielstein-Gelb (Markenfarbe, nur für Buchstaben, Primäraktion, Punkte)
+  stop: Koralle (Stopp, Ablehnung, Fehler) · go: Mint (gültig, online)
+*/
 @theme {
-  --color-paper: #f7f3ea;
-  --color-paper-2: #efe8d8;
-  --color-line: #d9cfba;
-  --color-ink: #1f2a44;
-  --color-ink-soft: #55607a;
-  --color-accent: #d9480f;
-  --color-accent-2: #f08c00;
-  --color-ok: #2b8a3e;
-  --color-bad: #c92a2a;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Segoe Print", "Bradley Hand", "Comic Neue", ui-rounded, cursive;
+  --color-night: #121735;
+  --color-night-2: #0d1129;
+  --color-deck: #1a2148;
+  --color-deck-2: #222a58;
+  --color-rim: #2f3973;
+  --color-rim-2: #3d4890;
+  --color-chalk: #eef0fb;
+  --color-haze: #a4abd6;
+  --color-dim: #6f77aa;
+  --color-tile: #ffc83d;
+  --color-tile-deep: #e2a514;
+  --color-tile-ink: #2a1d00;
+  --color-stop: #ff6b5a;
+  --color-go: #3ddc97;
+  --color-sky: #7aa2ff;
+
+  --font-sans: "Figtree Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque Variable", "Figtree Variable", ui-sans-serif, sans-serif;
+
+  --radius-panel: 1.25rem;
+  --radius-field: 0.75rem;
+  --radius-tile: 0.875rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-paper: #171b26;
-    --color-paper-2: #1f2433;
-    --color-line: #333a4d;
-    --color-ink: #e8e4d8;
-    --color-ink-soft: #a3a8b8;
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-night);
+  background-image:
+    radial-gradient(1200px 600px at 85% -10%, rgb(122 162 255 / 0.12), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgb(255 200 61 / 0.07), transparent 60%);
+  background-attachment: fixed;
+  color: var(--color-chalk);
+  font-feature-settings: "ss01", "cv11";
+}
+
+::selection {
+  background: var(--color-tile);
+  color: var(--color-tile-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-tile);
+  outline-offset: 2px;
+}
+
+/* ---------- Flächen ---------- */
+
+@utility panel {
+  border-radius: var(--radius-panel);
+  background: linear-gradient(180deg, var(--color-deck-2), var(--color-deck));
+  border: 1px solid var(--color-rim);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.05),
+    0 20px 40px -24px rgb(0 0 0 / 0.6);
+}
+
+@utility well {
+  border-radius: var(--radius-field);
+  background: var(--color-night-2);
+  border: 1px solid var(--color-rim);
+}
+
+/* ---------- Spielstein ---------- */
+
+@utility tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-tile);
+  background: linear-gradient(160deg, #ffd96b 0%, var(--color-tile) 45%, var(--color-tile-deep) 100%);
+  color: var(--color-tile-ink);
+  font-family: var(--font-display);
+  font-weight: 800;
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.55),
+    inset 0 -4px 0 rgb(0 0 0 / 0.18),
+    0 6px 0 #9a6d00,
+    0 14px 24px -8px rgb(0 0 0 / 0.6);
+}
+
+/* ---------- Bedienelemente ---------- */
+
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-field);
+  padding: 0.625rem 1.125rem;
+  font-weight: 650;
+  line-height: 1.25rem;
+  transition: transform 120ms ease, background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
   }
 }
 
-html, body {
-  background: var(--color-paper);
-  color: var(--color-ink);
-}
-
-/* Karopapier-Hintergrund */
-.grid-paper {
-  background-image:
-    linear-gradient(var(--color-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-line) 1px, transparent 1px);
-  background-size: 24px 24px;
-  background-position: -1px -1px;
-}
-
-@utility card {
-  @apply rounded-xl border border-line bg-paper-2/90 p-4 shadow-sm backdrop-blur;
-}
-@utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
-}
 @utility btn-primary {
-  @apply btn bg-accent text-white hover:brightness-110 active:translate-y-px;
+  @apply btn;
+  background: var(--color-tile);
+  color: var(--color-tile-ink);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.5), 0 3px 0 #9a6d00;
+  &:hover:not(:disabled) {
+    background: #ffd35f;
+  }
 }
-@utility btn-ghost {
-  @apply btn border border-line hover:bg-paper;
+
+@utility btn-secondary {
+  @apply btn;
+  background: var(--color-deck-2);
+  border: 1px solid var(--color-rim-2);
+  color: var(--color-chalk);
+  &:hover:not(:disabled) {
+    background: var(--color-rim);
+  }
 }
-@utility input {
-  @apply w-full rounded-lg border border-line bg-paper px-3 py-2 outline-none focus:border-accent focus:ring-2 focus:ring-accent/30;
+
+@utility btn-quiet {
+  @apply btn;
+  color: var(--color-haze);
+  &:hover:not(:disabled) {
+    color: var(--color-chalk);
+    background: rgb(255 255 255 / 0.05);
+  }
 }
-@utility label {
-  @apply mb-1 block text-sm font-medium text-ink-soft;
+
+@utility btn-danger {
+  @apply btn;
+  background: var(--color-stop);
+  color: #2b0700;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4), 0 3px 0 #a6322a;
+  &:hover:not(:disabled) {
+    background: #ff8172;
+  }
+}
+
+@utility icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  color: var(--color-haze);
+  transition: background-color 150ms ease, color 150ms ease;
+  &:hover {
+    background: rgb(255 255 255 / 0.07);
+    color: var(--color-chalk);
+  }
+}
+
+@utility field {
+  width: 100%;
+  border-radius: var(--radius-field);
+  background: var(--color-night-2);
+  border: 1px solid var(--color-rim);
+  padding: 0.625rem 0.875rem;
+  color: var(--color-chalk);
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+  &::placeholder {
+    color: var(--color-dim);
+  }
+  &:focus {
+    border-color: var(--color-tile);
+    box-shadow: 0 0 0 3px rgb(255 200 61 / 0.18);
+  }
+  &:disabled {
+    opacity: 0.6;
+  }
+}
+
+@utility field-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-haze);
+}
+
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  background: var(--color-night-2);
+  border: 1px solid var(--color-rim);
+}
+
+/* ---------- Bewegung ---------- */
+
+@keyframes tile-land {
+  0% { transform: translateY(-14px) rotate(-8deg) scale(0.92); }
+  60% { transform: translateY(2px) rotate(2deg) scale(1.03); }
+  100% { transform: translateY(0) rotate(0) scale(1); }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@utility animate-tile-land {
+  animation: tile-land 520ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+}
+
+@utility animate-pop {
+  animation: pop-in 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }

@@ -1,5 +1,9 @@
 "use client";
 
+import { Check, CircleCheck, Copy, Gavel, ThumbsDown, Undo2 } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
+import { CategoryIcon } from "@/components/ui/CategoryIcon";
+import { Tile } from "@/components/ui/Tile";
 import type { RoomCtx } from "./RoomClient";
 
 function norm(w: string) {
@@ -18,24 +22,28 @@ export function Voting({ ctx }: { ctx: RoomCtx }) {
   const connected = state.players.filter((p) => p.connected).length;
 
   return (
-    <div className="space-y-4">
-      <div className="card flex flex-wrap items-center gap-3">
-        <div>
-          <h2 className="font-display text-2xl">Abstimmung – Buchstabe {round.letter}</h2>
-          <p className="text-sm text-ink-soft">
-            Klick auf ein Wort, um es abzulehnen. Mehr als die Hälfte Ablehnungen = 0 Punkte.
+    <div className="space-y-6">
+      <section className="panel flex flex-wrap items-center gap-5 p-6">
+        <Tile size="md">{round.letter}</Tile>
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-2xl font-bold">Antworten prüfen</h1>
+          <p className="text-sm text-haze">
+            Lehne Wörter ab, die nicht passen. Lehnt mehr als die Hälfte ab, gibt es 0 Punkte.
           </p>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <span className="text-sm text-ink-soft">{readyCount}/{connected} fertig</span>
-          <button className={me?.ready ? "btn-ghost" : "btn-primary"} onClick={() => act("vote:ready", !me?.ready)}>
-            {me?.ready ? "Doch nicht fertig" : "Fertig"}
-          </button>
+        <div className="flex items-center gap-2">
+          <span className="mr-1 text-sm text-dim tabular-nums">{readyCount}/{connected} fertig</span>
           {isHost && (
-            <button className="btn-ghost" onClick={() => act("results:force")}>Auswerten</button>
+            <button className="btn-quiet border border-rim" onClick={() => act("results:force")} title="Abstimmung sofort beenden">
+              <Gavel className="h-4 w-4" /> Auswerten
+            </button>
           )}
+          <button className={me?.ready ? "btn-secondary" : "btn-primary"} onClick={() => act("vote:ready", !me?.ready)}>
+            {me?.ready ? <Undo2 className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+            {me?.ready ? "Weiter prüfen" : "Fertig"}
+          </button>
         </div>
-      </div>
+      </section>
 
       {state.settings.categories.map((cat, ci) => {
         const counts = new Map<string, number>();
@@ -44,49 +52,74 @@ export function Voting({ ctx }: { ctx: RoomCtx }) {
           if (n) counts.set(n, (counts.get(n) ?? 0) + 1);
         }
         return (
-          <div key={cat} className="card">
-            <h3 className="mb-2 font-semibold">{cat}</h3>
+          <section key={cat} className="panel p-5" aria-labelledby={`cat-${ci}`}>
+            <h2 id={`cat-${ci}`} className="mb-3 flex items-center gap-2 font-display text-lg font-bold">
+              <CategoryIcon name={cat} className="h-5 w-5 text-tile" /> {cat}
+            </h2>
             <ul className="grid gap-2 sm:grid-cols-2">
               {state.players.map((p) => {
                 const word = answers[p.id]?.[ci] ?? "";
                 const n = norm(word);
-                const wrongLetter = n.length < 2 || !n.startsWith(letter);
+                const empty = !word.trim();
+                const wrongLetter = !empty && (n.length < 2 || !n.startsWith(letter));
                 const rejecters = (votes[`${p.id}:${ci}`] ?? []).filter((v) => v !== p.id);
                 const iRejected = rejecters.includes(state.you);
                 const rejected = eligible > 0 && rejecters.length * 2 > eligible;
-                const dup = n && (counts.get(n) ?? 0) > 1;
+                const dup = !!n && (counts.get(n) ?? 0) > 1;
                 const own = p.id === state.you;
-                const clickable = !own && word.trim().length > 0;
+                const dead = empty || wrongLetter || rejected;
                 return (
-                  <li key={p.id}>
-                    <button
-                      disabled={!clickable}
-                      onClick={() => act("vote:toggle", { target: p.id, category: ci })}
-                      className={`flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left transition ${
-                        wrongLetter || rejected
-                          ? "border-bad/40 bg-bad/10"
-                          : iRejected
-                            ? "border-bad/40 bg-paper"
-                            : "border-line bg-paper hover:border-accent"
-                      } ${clickable ? "cursor-pointer" : "cursor-default"}`}
-                    >
-                      <span className="w-24 shrink-0 truncate text-xs text-ink-soft">{p.nickname}</span>
-                      <span className={`truncate font-medium ${wrongLetter || rejected ? "line-through opacity-60" : ""}`}>
-                        {word || <i className="text-ink-soft">leer</i>}
-                      </span>
-                      {dup && !wrongLetter && <span className="text-xs text-accent-2">doppelt</span>}
-                      {rejecters.length > 0 && (
-                        <span className="ml-auto text-xs text-bad" title={`${rejecters.length} Ablehnung(en)`}>
-                          ✗ {rejecters.length}
-                        </span>
+                  <li
+                    key={p.id}
+                    className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors ${
+                      dead ? "border-stop/30 bg-stop/[0.07]" : "border-rim bg-night-2"
+                    }`}
+                  >
+                    <Avatar name={p.nickname} image={p.image} seed={p.id} size={28} />
+                    <div className="min-w-0 flex-1">
+                      {empty ? (
+                        <p className="py-0.5 text-sm italic text-dim">nichts eingetragen</p>
+                      ) : (
+                        <p className={`truncate font-display text-lg font-semibold ${dead ? "text-dim line-through" : ""}`}>{word}</p>
                       )}
-                      {iRejected && <span className="text-xs text-bad">(du)</span>}
-                    </button>
+                      <p className="flex items-center gap-2 text-xs text-dim">
+                        <span className="truncate">{own ? "Du" : p.nickname}</span>
+                        {wrongLetter && <span className="text-stop">falscher Buchstabe</span>}
+                        {dup && !dead && (
+                          <span className="flex items-center gap-1 text-sky">
+                            <Copy className="h-3 w-3" /> doppelt
+                          </span>
+                        )}
+                        {!dead && !dup && !empty && (
+                          <span className="flex items-center gap-1 text-go">
+                            <CircleCheck className="h-3 w-3" /> gültig
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    {!own && !empty && (
+                      <button
+                        onClick={() => act("vote:toggle", { target: p.id, category: ci })}
+                        aria-pressed={iRejected}
+                        title={iRejected ? "Ablehnung zurücknehmen" : "Wort ablehnen"}
+                        className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold transition ${
+                          iRejected ? "bg-stop text-[#2b0700]" : "text-haze hover:bg-stop/15 hover:text-stop"
+                        }`}
+                      >
+                        <ThumbsDown className="h-4 w-4" />
+                        {rejecters.length > 0 && <span className="tabular-nums">{rejecters.length}</span>}
+                      </button>
+                    )}
+                    {own && rejecters.length > 0 && (
+                      <span className="flex items-center gap-1 text-sm text-stop" title="Ablehnungen">
+                        <ThumbsDown className="h-4 w-4" /> {rejecters.length}
+                      </span>
+                    )}
                   </li>
                 );
               })}
             </ul>
-          </div>
+          </section>
         );
       })}
     </div>
