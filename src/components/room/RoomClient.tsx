@@ -117,7 +117,7 @@ export function RoomClient({ code, watch = false }: { code: string; watch?: bool
     return (
       <div className="panel mx-auto max-w-md p-8 text-center">
         <AlertCircle className="mx-auto h-10 w-10 text-stop" />
-        <p className="mt-3 font-display text-xl font-bold">{error}</p>
+        <p className="mt-3 font-display text-xl font-semibold">{error}</p>
         <Link href="/" className="btn-primary mt-6">Zur Startseite</Link>
       </div>
     );
@@ -137,7 +137,7 @@ export function RoomClient({ code, watch = false }: { code: string; watch?: bool
         <div className="flex justify-center">
           <CodeTiles code={code} />
         </div>
-        <h1 className="text-center font-display text-2xl font-bold">Wie heißt du?</h1>
+        <h1 className="text-center font-display text-2xl font-semibold">Wie heißt du?</h1>
         <input className="field text-lg" autoFocus maxLength={20} value={nick} onChange={(e) => setNick(e.target.value)} placeholder="Spielername" aria-label="Spielername" />
         <button className="btn-primary w-full py-3">Raum betreten</button>
       </form>

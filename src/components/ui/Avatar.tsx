@@ -12,7 +12,7 @@ export const AVATAR_ICON_MAP: Record<AvatarIcon, LucideIcon> = {
   pizza: Pizza, coffee: Coffee, music: Music, gamepad: Gamepad2, anchor: Anchor, leaf: Leaf, skull: Skull, heart: Heart,
 };
 
-const HUES = ["#7aa2ff", "#3ddc97", "#ff6b5a", "#c792ff", "#ff9f43", "#4dd0e1", "#f06fb0", "#ffc83d"];
+const HUES = ["#ededed", "#a1a1a1", "#d4d4d4", "#8f8f8f"];
 
 function hueFor(seed: string) {
   let h = 0;
@@ -45,14 +45,14 @@ export function Avatar({
   const Icon = avatar ? AVATAR_ICON_MAP[avatar.icon as AvatarIcon] : null;
   return (
     <span
-      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-display font-bold ${dim ? "opacity-40 grayscale" : ""}`}
+      className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-display font-semibold ${dim ? "opacity-40 grayscale" : ""}`}
       style={{
         width: size,
         height: size,
         fontSize: size * 0.4,
-        background: `color-mix(in oklab, ${color} 24%, var(--color-night))`,
-        color,
-        boxShadow: `inset 0 0 0 1.5px color-mix(in oklab, ${color} 55%, transparent)`,
+        background: avatar ? `color-mix(in oklab, ${color} 16%, var(--color-night-2))` : "var(--color-night-2)",
+        color: avatar ? color : "var(--color-haze)",
+        boxShadow: "inset 0 0 0 1px var(--color-rim-2)",
       }}
       aria-hidden="true"
     >

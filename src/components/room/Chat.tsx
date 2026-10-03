@@ -28,7 +28,7 @@ export function Chat({
 
   return (
     <section className="panel flex h-96 flex-col overflow-hidden" aria-labelledby="chat-h">
-      <h2 id="chat-h" className="flex items-center gap-2 border-b border-rim px-5 py-3 font-display text-lg font-bold">
+      <h2 id="chat-h" className="flex items-center gap-2 border-b border-rim px-5 py-3 font-display text-lg font-semibold">
         <MessageSquare className="h-4 w-4 text-haze" /> Chat
       </h2>
       <div ref={box} className="flex-1 space-y-3 overflow-y-auto px-4 py-3 text-sm" aria-live="polite">
@@ -54,7 +54,7 @@ export function Chat({
                 </span>
                 <p
                   className={`break-words rounded-2xl px-3 py-1.5 ${
-                    own ? "rounded-tr-md bg-tile text-tile-ink" : "rounded-tl-md bg-night-2"
+                    own ? "rounded-tr-md bg-chalk text-night" : "rounded-tl-md bg-night-2"
                   }`}
                 >
                   {m.text}
@@ -74,7 +74,7 @@ export function Chat({
         }}
       >
         <input className="field py-2 text-sm" maxLength={300} value={text} onChange={(e) => setText(e.target.value)} placeholder="Nachricht schreiben" aria-label="Nachricht" />
-        <button className="icon-btn h-10 w-10 shrink-0 bg-deck-2 text-tile" aria-label="Senden">
+        <button className="icon-btn h-10 w-10 shrink-0 border border-rim-2 text-chalk" aria-label="Senden">
           <SendHorizontal className="h-4 w-4" />
         </button>
       </form>

@@ -31,7 +31,7 @@ export function Results({ ctx }: { ctx: RoomCtx }) {
       <section className="panel flex flex-wrap items-center gap-5 p-6">
         <Tile size="md">{round.letter}</Tile>
         <div className="min-w-0 flex-1">
-          <h1 className="flex flex-wrap items-center gap-2 font-display text-2xl font-bold">
+          <h1 className="flex flex-wrap items-center gap-2 font-display text-2xl font-semibold">
             Runde {round.index + 1} ausgewertet <ModifierBadge round={round} />
           </h1>
           <p className="text-sm text-haze">
@@ -59,7 +59,7 @@ export function Results({ ctx }: { ctx: RoomCtx }) {
                   {p.nickname}
                   {p.id === state.you && <span className="ml-1.5 text-sm font-normal text-dim">(du)</span>}
                 </p>
-                <span className={`font-display text-2xl font-extrabold tabular-nums ${gained === best && best > 0 ? "text-tile" : ""}`}>
+                <span className={`font-display text-2xl font-semibold tabular-nums ${gained === best && best > 0 ? "text-tile" : ""}`}>
                   <CountUp value={gained} prefix="+" delay={idx * 120 + 200} />
                 </span>
                 <span className="w-24 text-right text-sm text-dim tabular-nums">{p.score} gesamt</span>

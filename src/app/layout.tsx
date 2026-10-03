@@ -5,6 +5,8 @@ import { HeaderControls } from "@/components/layout/HeaderControls";
 import { auth, signOut } from "@/auth";
 import { Logo } from "@/components/ui/Logo";
 import { Avatar } from "@/components/ui/Avatar";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,8 +16,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#121735" },
-    { media: "(prefers-color-scheme: light)", color: "#eef1fa" },
+    { media: "(prefers-color-scheme: dark)", color: "#000000" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
   ],
 };
 
@@ -23,7 +25,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const session = await auth().catch(() => null);
   const user = session?.user;
   return (
-    <html lang="de" suppressHydrationWarning>
+    <html lang="de" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable}`}>
       <head>
         {/* Theme vor dem ersten Rendern setzen, damit nichts aufblitzt */}
         <script
@@ -33,8 +35,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body className="min-h-dvh font-sans antialiased">
-        <header className="sticky top-0 z-30 border-b border-rim/70 bg-night/80 backdrop-blur-xl">
-          <nav className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4">
+        <header className="sticky top-0 z-30 border-b border-rim bg-night/80 backdrop-blur-md">
+          <nav className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
             <Link href="/" className="mr-4 rounded-lg" aria-label="Wortjagd Startseite">
               <Logo />
             </Link>

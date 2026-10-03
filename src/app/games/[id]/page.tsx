@@ -69,7 +69,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
   return (
     <div className="space-y-6">
       <section className="panel p-6">
-        <h1 className="font-display text-3xl font-extrabold">Spielverlauf</h1>
+        <h1 className="font-display text-3xl font-semibold">Spielverlauf</h1>
         <p className="mt-1 flex items-center gap-1.5 text-sm text-haze">
           <CalendarDays className="h-4 w-4" />
           {game.finishedAt.toLocaleString("de-DE", { dateStyle: "long", timeStyle: "short", timeZone: "Europe/Berlin" })}, Raum {game.roomCode}
@@ -78,10 +78,10 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
           {players.map((p) => {
             const inner = (
               <>
-                <span className={`font-display text-lg font-bold ${p.rank === 1 ? "text-tile" : "text-haze"}`}>{p.rank}.</span>
+                <span className={`font-display text-lg font-semibold ${p.rank === 1 ? "text-tile" : "text-haze"}`}>{p.rank}.</span>
                 <Avatar name={p.nickname} image={p.image} seed={p.userId ?? p.nickname} size={30} />
                 <span className="font-medium">{p.nickname}</span>
-                <span className="font-display font-bold tabular-nums">{p.score}</span>
+                <span className="font-display font-semibold tabular-nums">{p.score}</span>
               </>
             );
             return (
@@ -105,7 +105,7 @@ export default async function GamePage({ params }: { params: Promise<{ id: strin
         <section key={index} className="panel p-6" aria-label={`Runde ${index + 1}`}>
           <div className="mb-4 flex items-center gap-4">
             <Tile size="sm">{r.letter}</Tile>
-            <h2 className="font-display text-xl font-bold">Runde {index + 1}</h2>
+            <h2 className="font-display text-xl font-semibold">Runde {index + 1}</h2>
             {r.modifier === "blitz" && (
               <span className="chip border-sky/40 text-sky"><Zap className="h-3.5 w-3.5" /> Blitzrunde</span>
             )}

@@ -112,7 +112,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
       <section className="panel flex flex-wrap items-center gap-5 p-6">
         <Avatar name={user.name ?? "?"} image={user.image} seed={user.id} size={72} />
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-display text-3xl font-extrabold">{user.name ?? "Unbekannt"}</h1>
+          <h1 className="truncate font-display text-3xl font-semibold">{user.name ?? "Unbekannt"}</h1>
           <p className="flex items-center gap-1.5 text-sm text-haze">
             <CalendarDays className="h-4 w-4" /> Dabei seit {user.createdAt.toLocaleDateString("de-DE", { month: "long", year: "numeric", timeZone: "Europe/Berlin" })}
           </p>
@@ -123,7 +123,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         {stats.map(({ icon: Icon, label, value }) => (
           <div key={label} className="panel p-4">
             <Icon className="h-5 w-5 text-tile" />
-            <p className="mt-3 font-display text-2xl font-bold tabular-nums">{value}</p>
+            <p className="mt-3 font-display text-2xl font-semibold tabular-nums">{value}</p>
             <p className="text-sm text-haze">{label}</p>
           </div>
         ))}
@@ -139,7 +139,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
         <>
           <div className="grid gap-6 lg:grid-cols-2">
             <section className="panel p-6">
-              <h2 className="mb-4 font-display text-xl font-bold">Buchstaben</h2>
+              <h2 className="mb-4 font-display text-xl font-semibold">Buchstaben</h2>
               {best ? (
                 <div className="flex flex-wrap gap-6">
                   <div className="flex items-center gap-3">
@@ -175,7 +175,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
             </section>
 
             <section className="panel p-6">
-              <h2 className="mb-4 font-display text-xl font-bold">Stärkste Kategorien</h2>
+              <h2 className="mb-4 font-display text-xl font-semibold">Stärkste Kategorien</h2>
               {categories.length === 0 ? (
                 <p className="text-sm text-dim">Noch zu wenige Antworten.</p>
               ) : (
@@ -196,7 +196,7 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
 
           {bestWords.length > 0 && (
             <section className="panel p-6">
-              <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold">
+              <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-semibold">
                 <Sparkles className="h-5 w-5 text-tile" /> Glanztreffer
               </h2>
               <p className="-mt-2 mb-4 text-sm text-haze">Wörter, mit denen du die volle Punktzahl geholt hast.</p>
@@ -213,12 +213,12 @@ export default async function ProfilePage({ params }: { params: Promise<{ id: st
           )}
 
           <section className="panel p-6">
-            <h2 className="mb-4 font-display text-xl font-bold">Letzte Partien</h2>
+            <h2 className="mb-4 font-display text-xl font-semibold">Letzte Partien</h2>
             <ul className="space-y-2">
               {recent.map((g) => (
                 <li key={g.id}>
                   <Link href={`/games/${g.id}`} className="well flex items-center gap-4 px-4 py-3 transition hover:border-rim-2">
-                    <span className={`font-display text-xl font-bold ${g.rank === 1 ? "text-tile" : "text-haze"}`}>{g.rank}.</span>
+                    <span className={`font-display text-xl font-semibold ${g.rank === 1 ? "text-tile" : "text-haze"}`}>{g.rank}.</span>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">
                         {g.score} Punkte, Platz {g.rank} von {g.players}

@@ -39,7 +39,7 @@ export function AvatarPicker({
         aria-label="Avatar ändern"
       >
         <Avatar name={name || "?"} avatar={value} size={size} />
-        <span className="absolute -bottom-1 -right-1 rounded-full border-2 border-deck bg-tile px-1.5 text-[0.6rem] font-bold text-tile-ink opacity-90 group-hover:opacity-100">
+        <span className="absolute -bottom-1 -right-1 rounded-full border-2 border-deck bg-chalk px-1.5 text-[0.6rem] font-semibold text-night opacity-90 group-hover:opacity-100">
           Ändern
         </span>
       </button>
@@ -48,11 +48,11 @@ export function AvatarPicker({
         ref={dialog}
         onClose={() => setOpen(false)}
         onClick={(e) => e.target === dialog.current && setOpen(false)}
-        className="panel m-auto w-[min(26rem,calc(100vw-2rem))] p-0 text-chalk backdrop:bg-black/60 backdrop:backdrop-blur-sm"
+        className="panel m-auto w-[min(26rem,calc(100vw-2rem))] p-0 text-chalk backdrop:bg-black/70 backdrop:backdrop-blur-sm"
       >
         <div className="p-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-display text-xl font-bold">Avatar wählen</h2>
+            <h2 className="font-display text-xl font-semibold">Avatar wählen</h2>
             <button className="icon-btn" onClick={() => setOpen(false)} aria-label="Schließen">
               <X className="h-4 w-4" />
             </button>
@@ -71,7 +71,7 @@ export function AvatarPicker({
                 aria-label={`Farbe ${c}`}
                 aria-pressed={draft.color === c}
               >
-                {draft.color === c && <Check className="h-4 w-4 text-[#121735]" />}
+                {draft.color === c && <Check className="h-4 w-4 text-black" />}
               </button>
             ))}
           </div>
@@ -85,7 +85,7 @@ export function AvatarPicker({
                   key={i}
                   onClick={() => setDraft({ ...draft, icon: i })}
                   className={`flex aspect-square items-center justify-center rounded-lg border transition ${
-                    on ? "border-tile bg-tile/15 text-tile" : "border-rim text-haze hover:text-chalk"
+                    on ? "border-chalk bg-chalk/10 text-chalk" : "border-rim text-haze hover:text-chalk"
                   }`}
                   aria-label={i}
                   aria-pressed={on}

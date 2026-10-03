@@ -9,9 +9,9 @@ import { CountUp } from "@/components/fx/useCountUp";
 import type { RoomCtx } from "./RoomClient";
 
 const PODIUM = [
-  { place: 1, height: "h-40", ring: "#ffc83d", delay: 700 },
-  { place: 2, height: "h-28", ring: "#c9d1f5", delay: 350 },
-  { place: 3, height: "h-20", ring: "#e0915a", delay: 0 },
+  { place: 1, height: "h-40", ring: "var(--color-chalk)", delay: 700 },
+  { place: 2, height: "h-28", ring: "var(--color-haze)", delay: 350 },
+  { place: 3, height: "h-20", ring: "var(--color-dim)", delay: 0 },
 ];
 
 export function Finished({ ctx }: { ctx: RoomCtx }) {
@@ -27,7 +27,7 @@ export function Finished({ ctx }: { ctx: RoomCtx }) {
     <div className="space-y-6">
       <Confetti />
       <section className="panel overflow-hidden px-6 pt-8">
-        <h1 className="text-center font-display text-3xl font-extrabold">
+        <h1 className="text-center font-display text-3xl font-semibold">
           {winner ? (winner.id === state.you ? "Du gewinnst!" : `${winner.nickname} gewinnt`) : "Spiel beendet"}
         </h1>
         <p className="mt-1 text-center text-haze">
@@ -44,12 +44,12 @@ export function Finished({ ctx }: { ctx: RoomCtx }) {
                     <Avatar name={p.nickname} image={p.image} avatar={p.avatar} seed={p.id} size={i === 0 ? 64 : 48} />
                   </span>
                   <span className="mt-2 w-full truncate text-center font-semibold">{p.nickname}</span>
-                  <span className="font-display text-xl font-bold tabular-nums">
+                  <span className="font-display text-xl font-semibold tabular-nums">
                     <CountUp value={p.score} delay={cfg.delay + 500} />
                   </span>
                 </div>
                 <div
-                  className={`animate-rise mt-3 flex w-full items-start justify-center rounded-t-2xl border border-b-0 border-rim bg-gradient-to-b from-deck-2 to-night-2 pt-3 ${cfg.height}`}
+                  className={`animate-rise mt-3 flex w-full items-start justify-center rounded-t-2xl border border-b-0 border-rim bg-night-2 pt-3 ${cfg.height}`}
                   style={{ animationDelay: `${cfg.delay}ms` }}
                 >
                   <Tile size={i === 0 ? "md" : "sm"}>{cfg.place}</Tile>
@@ -62,7 +62,7 @@ export function Finished({ ctx }: { ctx: RoomCtx }) {
 
       <section className="panel p-6" aria-labelledby="table-h">
         <div className="mb-4 flex flex-wrap items-center gap-3">
-          <h2 id="table-h" className="flex items-center gap-2 font-display text-xl font-bold">
+          <h2 id="table-h" className="flex items-center gap-2 font-display text-xl font-semibold">
             <Medal className="h-5 w-5 text-tile" /> Punkte pro Runde
           </h2>
           {state.savedGameId && (
@@ -92,7 +92,7 @@ export function Finished({ ctx }: { ctx: RoomCtx }) {
             <tbody>
               {ranked.map((p, i) => (
                 <tr key={p.id} className="border-t border-rim/60">
-                  <td className="py-3 pr-2 font-display font-bold text-haze">{i + 1}.</td>
+                  <td className="py-3 pr-2 font-display font-semibold text-haze">{i + 1}.</td>
                   <td className="py-3">
                     <span className="flex items-center gap-2">
                       <Avatar name={p.nickname} image={p.image} avatar={p.avatar} seed={p.id} size={24} />
@@ -102,7 +102,7 @@ export function Finished({ ctx }: { ctx: RoomCtx }) {
                   {state.history.map((h, j) => (
                     <td key={j} className="px-1 py-3 text-center tabular-nums text-haze">{h.totals[p.id] ?? 0}</td>
                   ))}
-                  <td className="py-3 text-right font-display text-lg font-bold tabular-nums text-tile">{p.score}</td>
+                  <td className="py-3 text-right font-display text-lg font-semibold tabular-nums text-tile">{p.score}</td>
                 </tr>
               ))}
             </tbody>

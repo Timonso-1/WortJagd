@@ -90,8 +90,8 @@ function PlayingRound({ ctx }: { ctx: RoomCtx }) {
           Runde {round.index + 1} von {state.settings.rounds}
         </p>
         <ModifierBadge round={round} large />
-        <Tile size="xl" className="animate-pulse text-tile-ink/40">?</Tile>
-        <p className="font-display text-6xl font-extrabold tabular-nums" aria-live="assertive">
+        <Tile size="xl" className="animate-pulse !bg-rim text-dim">?</Tile>
+        <p className="font-display text-6xl font-semibold tabular-nums" aria-live="assertive">
           {pre || ""}
         </p>
         {round.bonusIndex !== null && (
@@ -111,7 +111,7 @@ function PlayingRound({ ctx }: { ctx: RoomCtx }) {
           Runde {round.index + 1} von {state.settings.rounds}
           <ModifierBadge round={round} />
         </p>
-        <p className="font-display text-xl font-bold sm:text-2xl">
+        <p className="font-display text-xl font-semibold sm:text-2xl">
           {isSpectator ? "Die Spieler schreiben" : `${filled}/${cats.length} ausgefüllt`}
         </p>
         {stopper ? (
@@ -145,7 +145,7 @@ function PlayingRound({ ctx }: { ctx: RoomCtx }) {
       <div className="space-y-6">
         {header}
         <section className="panel p-6">
-          <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold">
+          <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-semibold">
             <Eye className="h-5 w-5 text-sky" /> Fortschritt
           </h2>
           <ul className="space-y-3">
@@ -187,7 +187,7 @@ function PlayingRound({ ctx }: { ctx: RoomCtx }) {
           const isBonus = round.bonusIndex === i;
           const hasJoker = state.myJoker === i;
           return (
-            <div key={c} className={`panel block p-4 ${hasJoker ? "!border-tile/70" : ""}`}>
+            <div key={c} className={`panel block p-4 ${hasJoker ? "!border-chalk" : ""}`}>
               <span className="mb-2 flex items-center gap-2 text-sm font-semibold text-haze">
                 <CategoryIcon name={c} className={`h-4 w-4 ${ok ? "text-tile" : ""}`} />
                 <label htmlFor={`a-${i}`}>{c}</label>

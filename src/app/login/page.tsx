@@ -22,8 +22,8 @@ function ProviderIcon({ id }: { id: string }) {
 }
 
 const BRAND: Record<string, string> = {
-  github: "bg-[#24292f] hover:bg-[#32383f] text-white",
-  discord: "bg-[#5865f2] hover:bg-[#6c78f5] text-white",
+  github: "btn-secondary",
+  discord: "btn-secondary",
 };
 
 export default async function LoginPage() {
@@ -31,8 +31,8 @@ export default async function LoginPage() {
   if (session?.user) redirect("/");
   return (
     <div className="panel mx-auto max-w-md p-8">
-      <LogoMark size={48} />
-      <h1 className="mt-4 font-display text-3xl font-extrabold">Anmelden</h1>
+      <LogoMark size={40} />
+      <h1 className="mt-4 font-display text-3xl font-semibold">Anmelden</h1>
       <p className="mt-2 text-haze">Spielen geht auch ohne Konto. Mit Konto bekommst du zusätzlich:</p>
       <ul className="mt-4 space-y-2 text-sm">
         <li className="flex items-center gap-3"><BarChart3 className="h-4 w-4 text-tile" /> Deine Ergebnisse in der Bestenliste</li>

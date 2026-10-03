@@ -15,7 +15,7 @@ export function Players({ ctx }: { ctx: RoomCtx }) {
   return (
     <section className="panel p-5" aria-labelledby="players-h">
       <div className="mb-3 flex items-baseline justify-between">
-        <h2 id="players-h" className="font-display text-lg font-bold">Spieler</h2>
+        <h2 id="players-h" className="font-display text-lg font-semibold">Spieler</h2>
         <span className="text-sm text-dim">{online} von {state.settings.maxPlayers}</span>
       </div>
       <ul className="space-y-1">
@@ -60,7 +60,7 @@ export function Players({ ctx }: { ctx: RoomCtx }) {
                 )}
               </div>
               {(p.ready || (lobbyReady && !p.isHost)) && <CheckCircle2 className="h-4 w-4 text-go" aria-hidden="true" />}
-              {showScore && <span className="font-display text-lg font-bold tabular-nums">{p.score}</span>}
+              {showScore && <span className="font-display text-lg font-semibold tabular-nums">{p.score}</span>}
               {isHost && !me && (
                 <span className="hidden items-center group-hover:flex group-focus-within:flex">
                   <button className="icon-btn h-7 w-7" title="Zum Spielleiter machen" onClick={() => act("host:transfer", { target: p.id })}>

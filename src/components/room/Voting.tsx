@@ -45,7 +45,7 @@ export function Reactions({
             onClick={() => toggle(e)}
             aria-pressed={mine}
             title={mine ? "Reaktion zurücknehmen" : `Auch mit ${e} reagieren`}
-            className={`animate-pop flex items-center gap-1 rounded-full px-2 py-0.5 text-sm ${mine ? "bg-tile/20 ring-1 ring-tile/60" : "bg-chalk/[0.07]"}`}
+            className={`animate-pop flex items-center gap-1 rounded-full px-2 py-0.5 text-sm ${mine ? "bg-chalk/15 ring-1 ring-chalk/50" : "bg-chalk/[0.07]"}`}
           >
             <span aria-hidden="true">{e}</span>
             <span className="text-xs font-semibold tabular-nums">{who.length}</span>
@@ -103,7 +103,7 @@ export function Voting({ ctx }: { ctx: RoomCtx }) {
       <section className="panel flex flex-wrap items-center gap-5 p-6">
         <Tile size="md">{round.letter}</Tile>
         <div className="min-w-0 flex-1">
-          <h1 className="flex flex-wrap items-center gap-2 font-display text-2xl font-bold">
+          <h1 className="flex flex-wrap items-center gap-2 font-display text-2xl font-semibold">
             Antworten prüfen <ModifierBadge round={round} />
           </h1>
           <p className="text-sm text-haze">
@@ -141,7 +141,7 @@ export function Voting({ ctx }: { ctx: RoomCtx }) {
             style={{ animationDelay: `${ci * 90}ms` }}
             aria-labelledby={`cat-${ci}`}
           >
-            <h2 id={`cat-${ci}`} className="mb-3 flex items-center gap-2 font-display text-lg font-bold">
+            <h2 id={`cat-${ci}`} className="mb-3 flex items-center gap-2 font-display text-lg font-semibold">
               <CategoryIcon name={cat} className="h-5 w-5 text-tile" /> {cat}
               {round.bonusIndex === ci && (
                 <span className="flex items-center gap-1 rounded-full bg-tile/15 px-2 py-0.5 font-sans text-xs text-tile">
@@ -210,7 +210,7 @@ export function Voting({ ctx }: { ctx: RoomCtx }) {
                           aria-pressed={iRejected}
                           title={iRejected ? "Ablehnung zurücknehmen" : "Wort ablehnen"}
                           className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold transition ${
-                            iRejected ? "bg-stop text-[#2b0700]" : "text-haze hover:bg-stop/15 hover:text-stop"
+                            iRejected ? "bg-stop text-white" : "text-haze hover:bg-stop/15 hover:text-stop"
                           }`}
                         >
                           <ThumbsDown className="h-4 w-4" />

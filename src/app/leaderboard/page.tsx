@@ -43,7 +43,7 @@ export default async function LeaderboardPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Trophy className="h-7 w-7 text-tile" />
-        <h1 className="font-display text-3xl font-extrabold">Bestenliste</h1>
+        <h1 className="font-display text-3xl font-semibold">Bestenliste</h1>
       </div>
       {failed ? (
         <div className="panel flex items-center gap-3 p-6 text-stop">
@@ -64,7 +64,7 @@ export default async function LeaderboardPage() {
                 <Avatar name={r.name ?? "?"} image={r.image} seed={r.userId ?? undefined} size={40} />
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{r.name ?? "?"}</p>
-                  <p className="font-display text-xl font-bold tabular-nums text-tile">{r.total}</p>
+                  <p className="font-display text-xl font-semibold tabular-nums text-tile">{r.total}</p>
                 </div>
               </Link>
             ))}
@@ -84,14 +84,14 @@ export default async function LeaderboardPage() {
               <tbody>
                 {rows.map((r, i) => (
                   <tr key={r.userId} className="border-t border-rim/60">
-                    <td className="px-4 py-3 font-display font-bold text-haze">{i + 1}.</td>
+                    <td className="px-4 py-3 font-display font-semibold text-haze">{i + 1}.</td>
                     <td className="px-4 py-3">
                       <Link href={`/profile/${r.userId}`} className="flex items-center gap-2.5 hover:text-tile">
                         <Avatar name={r.name ?? "?"} image={r.image} seed={r.userId ?? undefined} size={28} />
                         <span className="font-medium">{r.name ?? "?"}</span>
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-right font-display text-base font-bold tabular-nums">{r.total}</td>
+                    <td className="px-4 py-3 text-right font-display text-base font-semibold tabular-nums">{r.total}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-haze">{r.games}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-haze">{r.wins}</td>
                     <td className="px-4 py-3 text-right tabular-nums text-haze">{r.avg}</td>

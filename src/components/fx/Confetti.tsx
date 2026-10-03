@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-const COLORS = ["#ffc83d", "#ff6b5a", "#3ddc97", "#7aa2ff", "#c792ff", "#ffffff"];
+const COLORS = ["#ffffff", "#d4d4d4", "#a1a1a1", "#6e6e6e"];
 
 /** Einmaliger Konfetti-Regen, respektiert reduzierte Bewegung */
 export function Confetti({ pieces = 160 }: { pieces?: number }) {

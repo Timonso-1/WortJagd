@@ -110,7 +110,7 @@ export default function Home() {
     <div className="space-y-10">
       <section className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
         <div>
-          <h1 className="max-w-[14ch] font-display text-5xl font-extrabold leading-[1.02] tracking-tight sm:text-6xl">
+          <h1 className="max-w-[14ch] font-display text-5xl font-semibold leading-[1.02] tracking-tight sm:text-6xl">
             Ein Buchstabe. Alle gegen die Uhr.
           </h1>
           <p className="mt-4 max-w-md text-lg text-haze">
@@ -178,7 +178,7 @@ export default function Home() {
 
           <div className="flex gap-2">
             <input
-              className="field text-center font-display text-xl font-bold uppercase tracking-[0.35em]"
+              className="field text-center font-display text-xl font-semibold uppercase tracking-[0.35em]"
               maxLength={5}
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
@@ -204,7 +204,7 @@ export default function Home() {
         <div className="panel p-6">
           <div className="mb-4 flex items-center gap-2">
             <Globe2 className="h-5 w-5 text-sky" />
-            <h2 className="font-display text-xl font-bold">Offene Räume</h2>
+            <h2 className="font-display text-xl font-semibold">Offene Räume</h2>
             <span className="ml-auto text-sm text-dim">{rooms.length > 0 ? `${rooms.length} aktiv` : ""}</span>
           </div>
           {rooms.length === 0 ? (
@@ -219,7 +219,7 @@ export default function Home() {
                 const full = r.players >= r.maxPlayers;
                 return (
                   <li key={r.code} className="well flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
-                    <span className="font-display text-lg font-bold tracking-[0.2em] text-tile">{r.code}</span>
+                    <span className="font-display text-lg font-semibold tracking-[0.2em] text-tile">{r.code}</span>
                     <div className="min-w-0">
                       <p className="truncate font-semibold">Raum von {r.hostName}</p>
                       <p className="text-sm text-dim">
@@ -255,7 +255,7 @@ export default function Home() {
         </div>
 
         <div className="panel p-6">
-          <h2 className="mb-4 font-display text-xl font-bold">So gibt es Punkte</h2>
+          <h2 className="mb-4 font-display text-xl font-semibold">So gibt es Punkte</h2>
           <dl className="space-y-3">
             {[
               ["20", "Nur du hast in der Kategorie ein gültiges Wort."],

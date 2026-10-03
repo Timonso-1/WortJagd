@@ -92,7 +92,7 @@ export function Lobby({ ctx }: { ctx: RoomCtx }) {
             ))}
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="font-display text-2xl font-bold">
+          <h1 className="font-display text-2xl font-semibold">
             {online < 2 ? "Warte auf Mitspieler" : waiting.length > 0 ? `${readyCount} von ${online} bereit` : "Alle sind bereit"}
           </h1>
           <p className="text-sm text-haze">
@@ -138,7 +138,7 @@ export function Lobby({ ctx }: { ctx: RoomCtx }) {
       </section>
 
       <section className="panel p-6" aria-labelledby="rules-h">
-        <h2 id="rules-h" className="mb-5 font-display text-xl font-bold">Regeln</h2>
+        <h2 id="rules-h" className="mb-5 font-display text-xl font-semibold">Regeln</h2>
         <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
           <Stepper icon={Repeat} label="Runden" value={s.rounds} min={1} max={26} disabled={!isHost} onChange={(v) => update({ rounds: v })} />
           <Stepper icon={Timer} label="Zeit pro Runde" unit="s" value={s.roundTime} min={20} max={600} step={10} disabled={!isHost} onChange={(v) => update({ roundTime: v })} />
@@ -183,8 +183,8 @@ export function Lobby({ ctx }: { ctx: RoomCtx }) {
                   onClick={() =>
                     update({ excludedLetters: ex ? s.excludedLetters.filter((x) => x !== l) : [...s.excludedLetters, l] })
                   }
-                  className={`aspect-square rounded-lg font-display text-base font-bold transition disabled:cursor-default ${
-                    ex ? "border border-dashed border-rim text-dim/70" : "bg-tile/90 text-tile-ink shadow-[inset_0_-2px_0_rgb(0_0_0/0.2)] hover:bg-tile"
+                  className={`aspect-square rounded-md font-mono text-sm font-semibold transition disabled:cursor-default ${
+                    ex ? "border border-dashed border-rim text-dim/70" : "bg-chalk text-night hover:opacity-85"
                   }`}
                 >
                   {l}
@@ -197,7 +197,7 @@ export function Lobby({ ctx }: { ctx: RoomCtx }) {
 
       <section className="panel p-6" aria-labelledby="cats-h">
         <div className="mb-4 flex items-baseline justify-between">
-          <h2 id="cats-h" className="font-display text-xl font-bold">Kategorien</h2>
+          <h2 id="cats-h" className="font-display text-xl font-semibold">Kategorien</h2>
           <span className="text-sm text-dim">{s.categories.length} von 20</span>
         </div>
         <ul className="flex flex-wrap gap-2">
@@ -308,7 +308,7 @@ function Stepper(props: {
             <Minus className="h-3.5 w-3.5" />
           </button>
         )}
-        <span className="min-w-14 text-center font-display text-lg font-bold tabular-nums">
+        <span className="min-w-14 text-center font-display text-lg font-semibold tabular-nums">
           {props.value}
           {props.unit && <span className="ml-0.5 text-sm font-medium text-dim">{props.unit}</span>}
         </span>
@@ -343,8 +343,8 @@ function Toggle(props: {
         className="flex items-center gap-2.5 text-sm font-semibold disabled:cursor-default"
       >
         <span className={props.on ? "text-chalk" : "text-dim"}>{props.on ? props.onText : props.offText}</span>
-        <span className={`relative h-6 w-11 rounded-full transition-colors ${props.on ? "bg-tile" : "bg-rim"}`}>
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-chalk shadow transition-all ${props.on ? "left-[1.375rem]" : "left-0.5"}`} />
+        <span className={`relative h-6 w-11 rounded-full transition-colors ${props.on ? "bg-chalk" : "bg-rim-2"}`}>
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full shadow transition-all ${props.on ? "left-[1.375rem] bg-night" : "left-0.5 bg-chalk"}`} />
         </span>
       </button>
     </Row>

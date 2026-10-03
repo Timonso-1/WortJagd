@@ -81,7 +81,7 @@ export default function PacksPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Library className="h-7 w-7 text-tile" />
-        <h1 className="font-display text-3xl font-extrabold">Kategorie-Pakete</h1>
+        <h1 className="font-display text-3xl font-semibold">Kategorie-Pakete</h1>
       </div>
       <p className="max-w-xl text-haze">
         Stell dir eigene Kategorien zusammen und lade sie in jedem Raum mit einem Klick. Öffentliche Pakete können alle nutzen.
@@ -99,7 +99,7 @@ export default function PacksPage() {
             </div>
           ) : (
             <>
-              <h2 id="mine-h" className="mb-4 font-display text-xl font-bold">
+              <h2 id="mine-h" className="mb-4 font-display text-xl font-semibold">
                 {editId ? "Paket bearbeiten" : "Neues Paket"}
               </h2>
               <div className="space-y-4">
@@ -164,7 +164,7 @@ export default function PacksPage() {
         </section>
 
         <section className="panel p-6" aria-labelledby="community-h">
-          <h2 id="community-h" className="mb-4 flex items-center gap-2 font-display text-xl font-bold">
+          <h2 id="community-h" className="mb-4 flex items-center gap-2 font-display text-xl font-semibold">
             <Users className="h-5 w-5 text-sky" /> Community
           </h2>
           {data?.community.length === 0 && <p className="text-sm text-dim">Noch niemand hat ein Paket geteilt.</p>}
