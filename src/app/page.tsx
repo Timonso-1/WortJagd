@@ -61,7 +61,9 @@ export default function Home() {
   useEffect(() => {
     setNick(getNickname());
     let off = () => {};
+    let cancelled = false;
     getSocket().then((s) => {
+      if (cancelled) return;
       const onList = (list: LobbyRoom[]) => setRooms(list);
       s.on("lobby:list", onList);
       emit<LobbyRoom[]>("lobby:subscribe").then(setRooms).catch(() => {});
@@ -70,7 +72,10 @@ export default function Home() {
         s.emit("lobby:unsubscribe");
       };
     });
-    return () => off();
+    return () => {
+      cancelled = true;
+      off();
+    };
   }, []);
 
   async function go(action: "create" | "join", joinCode?: string) {

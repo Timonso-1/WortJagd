@@ -44,12 +44,14 @@ export function RoomClient({ code }: { code: string }) {
 
   useEffect(() => {
     let cleanup = () => {};
+    let cancelled = false;
     getSocket().then((s) => {
+      if (cancelled) return;
       const onState = (st: RoomState) => {
         offset.current = st.serverTime - Date.now();
         setState(st);
       };
-      const onMsg = (m: ChatMessage) => setChat((c) => [...c.slice(-99), m]);
+      const onMsg = (m: ChatMessage) => setChat((c) => (c.some((x) => x.id === m.id) ? c : [...c.slice(-99), m]));
       const onHistory = (h: ChatMessage[]) => setChat(h);
       const onKicked = () => setError("Der Spielleiter hat dich aus dem Raum entfernt.");
       const onReconnect = () => {
@@ -73,7 +75,10 @@ export function RoomClient({ code }: { code: string }) {
       if (n) join(n);
       else setNeedNick(true);
     });
-    return () => cleanup();
+    return () => {
+      cancelled = true;
+      cleanup();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
@@ -193,7 +198,7 @@ export function RoomClient({ code }: { code: string }) {
         </div>
         <aside className="space-y-6">
           <Players ctx={ctx} />
-          <Chat messages={chat} me={state.you} onSend={(text) => act("chat:send", { text })} />
+          <Chat messages={chat} me={state.you} players={state.players} onSend={(text) => act("chat:send", { text })} />
         </aside>
       </div>
 
