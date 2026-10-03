@@ -1,0 +1,26 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wortjagd
+      POSTGRES_PASSWORD: wortjagd
+      POSTGRES_DB: wortjagd
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on: [db]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://wortjagd:wortjagd@db:5432/wortjagd
+    ports:
+      - "3000:3000"
+    profiles: [app]
+
+volumes:
+  pgdata:
