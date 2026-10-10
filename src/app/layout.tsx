@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
-import { LayoutGrid, LogIn, LogOut, Trophy } from "lucide-react";
+import { LayoutGrid, LogIn, LogOut, NotebookPen, Trophy } from "lucide-react";
 import { HeaderControls } from "@/components/layout/HeaderControls";
 import { auth, signOut } from "@/auth";
 import { Logo } from "@/components/ui/Logo";
@@ -39,6 +39,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <nav className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4">
             <Link href="/" className="mr-4 rounded-lg" aria-label="Wortjagd Startseite">
               <Logo />
+            </Link>
+            <Link href="/tisch" className="btn-quiet px-3 py-2 text-sm">
+              <NotebookPen className="h-4 w-4" aria-hidden="true" />
+              <span className="hidden sm:inline">Am Tisch</span>
             </Link>
             <Link href="/packs" className="btn-quiet px-3 py-2 text-sm">
               <LayoutGrid className="h-4 w-4" aria-hidden="true" />

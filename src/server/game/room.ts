@@ -19,12 +19,8 @@ import {
 
 export const DEFAULT_CATEGORIES = ["Stadt", "Land", "Fluss", "Name", "Tier", "Beruf"];
 
-export const BONUS_POOL = [
-  "Pflanze", "Essen", "Getränk", "Marke", "Sportart", "Film", "Serie", "Band", "Videospiel", "Promi",
-  "Körperteil", "Werkzeug", "Musikinstrument", "Kleidung", "Automarke", "Hobby", "Farbe", "Sehenswürdigkeit",
-  "Gemüse", "Obst", "Superheld", "Märchenfigur", "Spielzeug", "Süßigkeit", "Gebirge", "Insel", "Krankheit",
-  "Möbelstück", "Comicfigur", "Ausrede fürs Zuspätkommen",
-];
+export { BONUS_POOL } from "../../lib/bonus";
+import { BONUS_POOL } from "../../lib/bonus";
 
 export const DEFAULT_SETTINGS: RoomSettings = {
   rounds: 5,

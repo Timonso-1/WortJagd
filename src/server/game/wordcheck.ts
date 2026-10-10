@@ -4,7 +4,8 @@ import { CITIES, CITIES_MULTI, RIVERS, RIVERS_MULTI, splitList } from "./wordlis
 
 countries.registerLocale(de);
 
-export type Hint = "known" | "unknown";
+import type { Hint } from "./types";
+export type { Hint };
 
 /** Vergleichsform für Listen: Umlaute ausgeschrieben, damit Köln und Koeln passen */
 export function listKey(word: string): string {

@@ -5,3 +5,5 @@ node_modules
 next-env.d.ts
 .idea/workspace.xml
 .idea/shelf/
+*.keystore
+*.jks

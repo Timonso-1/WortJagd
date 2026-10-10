@@ -1,4 +1,6 @@
-import type { Hint } from "./wordcheck";
+
+/** Hinweis aus der Wortliste */
+export type Hint = "known" | "unknown";
 
 export type Phase = "lobby" | "playing" | "voting" | "results" | "finished";
 export type RoundModifier = "blitz" | "double" | null;

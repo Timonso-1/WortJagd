@@ -1,0 +1,25 @@
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "../../src/app/globals.css";
+
+/* Gemeinsame Komponenten aus dem Web-Projekt einlesen */
+@source "../../src/components";
+@source "../../src/lib";
+@source "./";
+
+:root {
+  --font-geist-sans: "Geist Variable";
+  --font-geist-mono: "Geist Mono Variable";
+}
+
+html,
+body {
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+input,
+textarea {
+  user-select: text;
+}

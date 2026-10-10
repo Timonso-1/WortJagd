@@ -1,5 +1,5 @@
 export function TimerRing({ left, total, size = 96 }: { left: number; total: number; size?: number }) {
-  const r = (size - 10) / 2;
+  const r = (size - (size > 120 ? 16 : 10)) / 2;
   const c = 2 * Math.PI * r;
   const frac = total > 0 ? Math.max(0, Math.min(1, left / total)) : 0;
   const urgent = left <= 10;
@@ -7,14 +7,14 @@ export function TimerRing({ left, total, size = 96 }: { left: number; total: num
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }} role="timer" aria-live="off" aria-label={`${left} Sekunden übrig`}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-rim)" strokeWidth="4" />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-rim)" strokeWidth={size > 120 ? 8 : 4} />
         <circle
           cx={size / 2}
           cy={size / 2}
           r={r}
           fill="none"
           stroke={color}
-          strokeWidth="4"
+          strokeWidth={size > 120 ? 8 : 4}
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c * (1 - frac)}
@@ -22,7 +22,8 @@ export function TimerRing({ left, total, size = 96 }: { left: number; total: num
         />
       </svg>
       <span
-        className={`absolute inset-0 flex items-center justify-center font-mono text-xl font-medium tabular-nums ${urgent ? "text-stop" : "text-chalk"}`}
+        className={`absolute inset-0 flex items-center justify-center font-mono font-medium tabular-nums ${urgent ? "text-stop" : "text-chalk"}`}
+        style={{ fontSize: Math.max(18, size * 0.2) }}
       >
         {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
       </span>
