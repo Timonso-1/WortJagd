@@ -9,6 +9,13 @@ import { ScoreEntry } from "./ScoreEntry";
 import { Scoreboard } from "./Scoreboard";
 import { Setup } from "./Setup";
 import { totals, useTableStore, type TableGame } from "./store";
+import { CardsFinished } from "./cards/CardsFinished";
+import { CardsPlay, placeOf } from "./cards/CardsPlay";
+import { CardsSetup } from "./cards/CardsSetup";
+import { useCardsStore } from "./cards/store";
+import { Segmented } from "./ui";
+
+type Mode = "classic" | "cards";
 
 function Sheet({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -86,6 +93,42 @@ function Finished({ game, onRematch, onNew }: { game: TableGame; onRematch: () =
 
 export function TableApp({ header }: { header?: (actions: React.ReactNode) => React.ReactNode }) {
   const { game, history, last, loaded, start, update, archive, clear } = useTableStore();
+  const cards = useCardsStore();
+  const [mode, setModeState] = useState<Mode>("classic");
+  useEffect(() => {
+    try {
+      const m = localStorage.getItem("wj.table.mode");
+      if (m === "cards" || m === "classic") setModeState(m);
+    } catch {
+      /* egal */
+    }
+  }, []);
+  const setMode = (m: Mode) => {
+    setModeState(m);
+    try {
+      localStorage.setItem("wj.table.mode", m);
+    } catch {
+      /* egal */
+    }
+  };
+  const archivedCards = useRef<string | null>(null);
+  useEffect(() => {
+    const g = cards.game;
+    if (g?.phase === "finished" && archivedCards.current !== g.id && g.rounds.length > 0) {
+      archivedCards.current = g.id;
+      archive({
+        id: g.id,
+        startedAt: g.startedAt,
+        mode: "cards",
+        players: g.players.map((p) => ({ id: p.id, name: p.name })),
+        rounds: [],
+        cardsResult: g.players
+          .map((p) => ({ name: p.name, total: placeOf(g, p) ?? 0 }))
+          .sort((a, b) => (a.total || 99) - (b.total || 99)),
+        categories: g.rounds.map((r) => r.category),
+      });
+    }
+  }, [cards.game, archive]);
   const [board, setBoard] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
@@ -101,7 +144,13 @@ export function TableApp({ header }: { header?: (actions: React.ReactNode) => Re
 
   const hasPoints = !!game?.rounds.some((r) => Object.values(r.points).some((v) => v !== null));
 
-  const actions = game ? (
+  const actions = cards.game ? (
+    cards.game.phase !== "finished" ? (
+      <button className="icon-btn" onClick={() => setConfirmEnd(true)} title="Partie beenden" aria-label="Partie beenden">
+        <Flag className="h-5 w-5" />
+      </button>
+    ) : null
+  ) : game ? (
     <>
       {game.players.length > 0 && game.phase !== "finished" && (
         <button className="icon-btn" onClick={() => setBoard(true)} title="Punkteliste" aria-label="Punkteliste">
@@ -127,8 +176,38 @@ export function TableApp({ header }: { header?: (actions: React.ReactNode) => Re
         <Loader2 className="h-5 w-5 animate-spin" />
       </p>
     );
+  } else if (!cards.loaded) {
+    body = null;
+  } else if (cards.game) {
+    body =
+      cards.game.phase === "finished" ? (
+        <CardsFinished
+          game={cards.game}
+          onRematch={() => cards.start(cards.game!.settings, cards.game!.players.map((p) => ({ id: p.id, name: p.name })))}
+          onNew={cards.clear}
+        />
+      ) : (
+        <CardsPlay game={cards.game} update={cards.update} />
+      );
   } else if (!game) {
-    body = <Setup initial={last} onStart={start} />;
+    body = (
+      <div className="space-y-5">
+        <Segmented<Mode>
+          label="Spielart"
+          value={mode}
+          onChange={setMode}
+          options={[
+            { value: "classic", label: "Klassisch" },
+            { value: "cards", label: "Karten loswerden" },
+          ]}
+        />
+        {mode === "classic" ? (
+          <Setup initial={last} onStart={start} />
+        ) : (
+          <CardsSetup initial={cards.last} onStart={cards.start} />
+        )}
+      </div>
+    );
   } else if (editRound !== null) {
     body = <ScoreEntry game={game} update={update} roundIndex={editRound} onDone={() => setEditRound(null)} />;
   } else if (game.phase === "finished") {
@@ -166,7 +245,13 @@ export function TableApp({ header }: { header?: (actions: React.ReactNode) => Re
 
       <Sheet open={confirmEnd} onClose={() => setConfirmEnd(false)} title="Partie beenden?">
         <p className="text-haze">
-          {hasPoints ? "Der aktuelle Stand wird als Endstand gespeichert." : "Es wurden noch keine Punkte eingetragen. Die Partie wird verworfen."}
+          {cards.game
+            ? cards.game.rounds.length > 0
+              ? "Wer noch Karten hat, bekommt keinen Platz. Der Stand wird gespeichert."
+              : "Es wurde noch keine Runde gespielt. Die Partie wird verworfen."
+            : hasPoints
+              ? "Der aktuelle Stand wird als Endstand gespeichert."
+              : "Es wurden noch keine Punkte eingetragen. Die Partie wird verworfen."}
         </p>
         <div className="mt-5 flex gap-2">
           <button className="btn-secondary flex-1" onClick={() => setConfirmEnd(false)}>Weiterspielen</button>
@@ -174,6 +259,11 @@ export function TableApp({ header }: { header?: (actions: React.ReactNode) => Re
             className="btn-danger flex-1"
             onClick={() => {
               setConfirmEnd(false);
+              if (cards.game) {
+                if (cards.game.rounds.length > 0) cards.update((g) => ({ ...g, phase: "finished", endsAt: null, pausedLeft: null }));
+                else cards.clear();
+                return;
+              }
               if (hasPoints) {
                 update((g) => ({
                   ...g,
@@ -196,10 +286,18 @@ export function TableApp({ header }: { header?: (actions: React.ReactNode) => Re
           {history.map((h) => (
             <li key={h.id} className="well px-4 py-3">
               <p className="text-xs text-dim">
-                {new Date(h.finishedAt).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" })} – {h.letters.join(" ")}
+                {new Date(h.finishedAt).toLocaleString("de-DE", { dateStyle: "medium", timeStyle: "short" })} – {h.mode === "cards" ? `Karten loswerden: ${h.letters.join(", ")}` : h.letters.join(" ")}
               </p>
               <p className="mt-1 text-sm">
-                {h.players.length === 0
+                {h.mode === "cards"
+                  ? h.players.map((p, i) => (
+                      <span key={i} className={p.total === 1 ? "font-semibold" : "text-haze"}>
+                        {i > 0 && ", "}
+                        {p.name}
+                        {p.total ? ` (${p.total}.)` : ""}
+                      </span>
+                    ))
+                  : h.players.length === 0
                   ? "Ohne Punkteliste"
                   : h.players.map((p, i) => (
                       <span key={i} className={i === 0 ? "font-semibold" : "text-haze"}>

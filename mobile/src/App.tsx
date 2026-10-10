@@ -11,8 +11,10 @@ type Screen = "home" | "table";
 
 function hasRunningGame() {
   try {
-    const g = JSON.parse(localStorage.getItem("wj.table.game") ?? "null");
-    return !!g && g.phase !== "finished";
+    return ["wj.table.game", "wj.cards.game"].some((k) => {
+      const g = JSON.parse(localStorage.getItem(k) ?? "null");
+      return !!g && g.phase !== "finished";
+    });
   } catch {
     return false;
   }
@@ -99,7 +101,7 @@ export function App() {
             <NotebookPen className="h-7 w-7 shrink-0" />
             <span className="flex-1">
               <span className="block text-lg font-semibold">Am Tisch</span>
-              <span className="block text-sm opacity-70">Mit Zetteln. Die App zieht Buchstaben, stoppt die Zeit und zählt Punkte.</span>
+              <span className="block text-sm opacity-70">Klassisch mit Zetteln oder „Karten loswerden“. Die App zieht, stoppt die Zeit und zählt mit.</span>
             </span>
             <ChevronRight className="h-5 w-5 shrink-0 opacity-60" />
           </button>

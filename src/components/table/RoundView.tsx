@@ -12,7 +12,7 @@ import type { TableGame } from "./store";
 
 type Update = (fn: (g: TableGame) => TableGame | null) => void;
 
-function useNow(active: boolean) {
+export function useNow(active: boolean) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     if (!active) return;
@@ -23,7 +23,7 @@ function useNow(active: boolean) {
 }
 
 /** Bildschirm bleibt an, solange der Timer läuft */
-function useWakeLock(active: boolean) {
+export function useWakeLock(active: boolean) {
   useEffect(() => {
     if (!active || !("wakeLock" in navigator)) return;
     let lock: WakeLockSentinel | null = null;
@@ -47,7 +47,7 @@ function useWakeLock(active: boolean) {
   }, [active]);
 }
 
-function vibrate(pattern: number | number[]) {
+export function vibrate(pattern: number | number[]) {
   try {
     navigator.vibrate?.(pattern);
   } catch {

@@ -45,6 +45,7 @@ export interface TableGame {
 
 export interface TableHistoryEntry {
   id: string;
+  mode?: "classic" | "cards";
   startedAt: number;
   finishedAt: number;
   players: { name: string; total: number }[];
@@ -89,6 +90,17 @@ export function totals(game: Pick<TableGame, "players" | "rounds">): Record<stri
   return t;
 }
 
+/** Ergebnis einer Partie "Karten loswerden" für den gemeinsamen Verlauf */
+export interface CardsArchive {
+  id: string;
+  startedAt: number;
+  mode: "cards";
+  players: TablePlayer[];
+  rounds: never[];
+  cardsResult: { name: string; total: number }[];
+  categories: string[];
+}
+
 /** Spielstand mit automatischer Speicherung im Gerät */
 export function useTableStore() {
   const [game, setGame] = useState<TableGame | null>(null);
@@ -130,16 +142,22 @@ export function useTableStore() {
     setGame(g);
   }, []);
 
-  const archive = useCallback((g: TableGame) => {
-    if (g.rounds.length === 0) return;
-    const t = totals(g);
-    const entry: TableHistoryEntry = {
-      id: g.id,
-      startedAt: g.startedAt,
-      finishedAt: Date.now(),
-      players: g.players.map((p) => ({ name: p.name, total: t[p.id] ?? 0 })).sort((a, b) => b.total - a.total),
-      letters: g.rounds.map((r) => r.letter),
-    };
+  const archive = useCallback((g: TableGame | CardsArchive) => {
+    let entry: TableHistoryEntry;
+    if ("mode" in g && g.mode === "cards") {
+      entry = { id: g.id, mode: "cards", startedAt: g.startedAt, finishedAt: Date.now(), players: g.cardsResult, letters: g.categories };
+    } else {
+      const tg = g as TableGame;
+      if (tg.rounds.length === 0) return;
+      const t = totals(tg);
+      entry = {
+        id: tg.id,
+        startedAt: tg.startedAt,
+        finishedAt: Date.now(),
+        players: tg.players.map((p) => ({ name: p.name, total: t[p.id] ?? 0 })).sort((a, b) => b.total - a.total),
+        letters: tg.rounds.map((r) => r.letter),
+      };
+    }
     setHistory((h) => {
       const next = [entry, ...h.filter((x) => x.id !== g.id)].slice(0, 30);
       write(KEY_HISTORY, next);
