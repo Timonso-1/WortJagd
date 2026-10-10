@@ -19,7 +19,6 @@ android {
     }
     signingConfigs {
         release {
-            // Signatur aus Umgebungsvariablen (GitHub Secrets), sonst unsigniert
             def ks = System.getenv("ANDROID_KEYSTORE_PATH")
             if (ks) {
                 storeFile file(ks)
