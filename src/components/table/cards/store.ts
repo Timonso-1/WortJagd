@@ -6,6 +6,8 @@ export type CheckMode = "after" | "live";
 
 export interface CardsSettings {
   cardsPerPlayer: number;
+  /** Wie oft jeder Buchstabe im Stapel liegt */
+  copies: number;
   /** Sekunden pro Kategorie */
   roundTime: number;
   /** true = App teilt Buchstaben aus, false = echte Karten, App zählt nur */
@@ -60,6 +62,7 @@ export const CARD_CATEGORIES = [
 
 export const DEFAULT_CARDS_SETTINGS: CardsSettings = {
   cardsPerPlayer: 3,
+  copies: 2,
   roundTime: 60,
   dealt: true,
   check: "after",
@@ -75,6 +78,21 @@ export function playableLetters(s: Pick<CardsSettings, "excludedLetters">) {
   return ALPHABET.filter((l) => !s.excludedLetters.includes(l));
 }
 
+/** Stapelgröße inkl. Mehrfachkarten */
+export function deckSize(s: Pick<CardsSettings, "excludedLetters" | "copies">) {
+  return playableLetters(s).length * (s.copies ?? 1);
+}
+
+/** Entfernt je ein Vorkommen der angegebenen Buchstaben */
+function withoutOnce(hand: string[], remove: string[]): string[] {
+  const rest = hand.slice();
+  for (const l of remove) {
+    const i = rest.indexOf(l);
+    if (i >= 0) rest.splice(i, 1);
+  }
+  return rest;
+}
+
 function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -85,7 +103,8 @@ function shuffle<T>(arr: T[]): T[] {
 }
 
 export function newCardsGame(settings: CardsSettings, players: { id: string; name: string }[]): CardsGame {
-  const deck = shuffle(playableLetters(settings));
+  const copies = settings.copies ?? 1;
+  const deck = shuffle(playableLetters(settings).flatMap((l) => Array.from({ length: copies }, () => l)));
   return {
     id: crypto.randomUUID(),
     startedAt: Date.now(),
@@ -117,7 +136,7 @@ export function removeCards(g: CardsGame, playerId: string, letters: string[] | 
   const players = g.players.map((p) => {
     if (p.id !== playerId || p.finishedRound !== null) return p;
     const n = typeof letters === "number" ? letters : letters.length;
-    const remaining = typeof letters === "number" ? p.letters : p.letters.filter((l) => !letters.includes(l));
+    const remaining = typeof letters === "number" ? p.letters : withoutOnce(p.letters, letters);
     const count = Math.max(0, p.count - n);
     const done = count === 0;
     if (done) finishedCount++;

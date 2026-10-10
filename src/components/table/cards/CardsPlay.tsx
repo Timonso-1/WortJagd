@@ -34,7 +34,7 @@ function PlayerHand({
   player: CardsPlayer;
   interactive: boolean;
   selected?: string[] | number;
-  onTapLetter?: (l: string) => void;
+  onTapLetter?: (l: string, index: number) => void;
   onRemoveOne?: () => void;
   onUndo?: () => void;
 }) {
@@ -64,13 +64,13 @@ function PlayerHand({
 
       {!place && game.settings.dealt && (
         <div className="mt-2.5 flex flex-wrap gap-2">
-          {player.letters.map((l) => {
-            const marked = Array.isArray(selected) && selected.includes(l);
+          {player.letters.map((l, i) => {
+            const marked = Array.isArray(selected) && selected.includes(String(i));
             return (
               <button
-                key={l}
+                key={`${l}-${i}`}
                 disabled={!interactive}
-                onClick={() => onTapLetter?.(l)}
+                onClick={() => onTapLetter?.(l, i)}
                 aria-pressed={marked}
                 aria-label={`Buchstabe ${l}${marked ? ", abgelegt" : ""}`}
                 className={`flex h-14 w-12 items-center justify-center rounded-lg font-display text-2xl font-semibold transition active:scale-95 ${
@@ -176,7 +176,11 @@ export function CardsPlay({ game, update }: { game: CardsGame; update: Update })
     update((g) => {
       let next = g;
       for (const [pid, what] of Object.entries(sel)) {
-        if ((Array.isArray(what) && what.length) || (typeof what === "number" && what > 0)) next = removeCards(next, pid, what);
+        const player = g.players.find((x) => x.id === pid);
+        if (!player) continue;
+        // Auswahl als Positionen gespeichert, damit doppelte Buchstaben einzeln wählbar sind
+        const value = Array.isArray(what) ? what.map((i) => player.letters[Number(i)]).filter(Boolean) : what;
+        if ((Array.isArray(value) && value.length) || (typeof value === "number" && value > 0)) next = removeCards(next, pid, value);
       }
       if (allDone(next)) sfx.win();
       return allDone(next) ? finishIfDone(next) : { ...next, phase: "category" };
@@ -274,10 +278,11 @@ export function CardsPlay({ game, update }: { game: CardsGame; update: Update })
                 player={p}
                 interactive
                 selected={sel[p.id] ?? (settings.dealt ? [] : 0)}
-                onTapLetter={(l) =>
+                onTapLetter={(_, i) =>
                   setSel((s) => {
                     const cur = (s[p.id] as string[] | undefined) ?? [];
-                    return { ...s, [p.id]: cur.includes(l) ? cur.filter((x) => x !== l) : [...cur, l] };
+                    const k = String(i);
+                    return { ...s, [p.id]: cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k] };
                   })
                 }
                 onRemoveOne={() => setSel((s) => ({ ...s, [p.id]: Math.min(p.count, ((s[p.id] as number) ?? 0) + 1) }))}

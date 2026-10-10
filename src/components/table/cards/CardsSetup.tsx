@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Layers, Play, Plus, Shuffle, Timer, X } from "lucide-react";
+import { Copy, Layers, Play, Plus, Shuffle, Timer, X } from "lucide-react";
 import { CategoryIcon } from "@/components/ui/CategoryIcon";
 import { PlayerEditor, Segmented, Stepper, Switch, formatTime } from "../ui";
-import { CARD_CATEGORIES, DEFAULT_CARDS_SETTINGS, playableLetters, type CardsSettings, type CheckMode } from "./store";
+import { CARD_CATEGORIES, DEFAULT_CARDS_SETTINGS, deckSize as calcDeck, type CardsSettings, type CheckMode } from "./store";
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
@@ -15,10 +15,10 @@ export function CardsSetup({
   initial: { settings: CardsSettings; players: { id: string; name: string }[] } | null;
   onStart: (s: CardsSettings, p: { id: string; name: string }[]) => void;
 }) {
-  const [s, setS] = useState<CardsSettings>(initial?.settings ?? DEFAULT_CARDS_SETTINGS);
+  const [s, setS] = useState<CardsSettings>({ ...DEFAULT_CARDS_SETTINGS, ...initial?.settings });
   const [players, setPlayers] = useState(initial?.players ?? []);
   const [cat, setCat] = useState("");
-  const deckSize = playableLetters(s).length;
+  const deckSize = calcDeck(s);
   const needed = players.length * s.cardsPerPlayer;
   const tooFew = s.dealt && needed > deckSize;
 
@@ -49,6 +49,18 @@ export function CardsSetup({
           on={s.dealt}
           onChange={(v) => setS({ ...s, dealt: v })}
         />
+        {s.dealt && (
+          <Stepper
+            icon={Copy}
+            label="Karten pro Buchstabe"
+            hint="Wie oft jeder Buchstabe im Stapel liegt"
+            value={s.copies}
+            min={1}
+            max={4}
+            format={(v) => `${v}×`}
+            onChange={(v) => setS({ ...s, copies: v })}
+          />
+        )}
         <div className="pb-3 pt-3">
           <p className="mb-2 font-medium">Karten ablegen</p>
           <Segmented<CheckMode>
@@ -91,7 +103,7 @@ export function CardsSetup({
               );
             })}
           </div>
-          {tooFew && <p className="mt-3 text-sm text-stop">Zu wenige Buchstaben für alle. Weniger Karten pro Spieler wählen oder Buchstaben dazunehmen.</p>}
+          {tooFew && <p className="mt-3 text-sm text-stop">Zu wenige Karten für alle. „Karten pro Buchstabe“ erhöhen, weniger Karten pro Spieler wählen oder Buchstaben dazunehmen.</p>}
         </section>
       )}
 
